@@ -25,6 +25,8 @@ class Physics {
         character.x += character.velocityX;
         character.y += character.velocityY;
 
+        console.log('After velocity: y=', character.y, 'velocityY=', character.velocityY, 'GROUND_Y=', CONFIG.GROUND_Y); // DEBUG
+
         // Keep character on screen
         character.x = Utils.clamp(character.x, 0, CONFIG.CANVAS_WIDTH - character.width);
 
@@ -32,6 +34,7 @@ class Physics {
         if (character.y + character.height >= CONFIG.GROUND_Y) {
             character.y = CONFIG.GROUND_Y - character.height;
             character.velocityY = 0;
+            console.log('GROUND COLLISION! Setting y to', character.y); // DEBUG
         }
     }
 

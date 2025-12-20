@@ -28,14 +28,16 @@ Un juego de pelea 2D estilo Street Fighter con personajes del universo Halo.
 ## Controles
 
 ### Jugador 1
-- **W, A, S, D** - Movimiento
+- **A / D** - Mover (izquierda/derecha)
+- **W** - Saltar (doble salto disponible)
 - **G** - Puño (daño ligero)
 - **H** - Patada (daño medio)
 - **J** - Ataque Especial (daño alto)
-- **ESPACIO** - Bloquear (reduce daño 50%)
+- **ESPACIO** - Bloquear (reduce daño 100%)
 
 ### Jugador 2
-- **Flechas** - Movimiento
+- **Flechas ← / →** - Mover
+- **Flecha ↑** - Saltar (doble salto disponible)
 - **NUMPAD 1** - Puño
 - **NUMPAD 2** - Patada
 - **NUMPAD 3** - Ataque Especial

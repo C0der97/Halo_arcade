@@ -25,17 +25,39 @@ class UIManager {
         // Initialize audio manager
         this.audioManager = new AudioManager();
 
+        // Game mode settings
+        this.gameMode = 'vsPlayer'; // 'vsPlayer' or 'vsCPU'
+        this.aiDifficulty = 'easy'; // 'easy', 'medium', or 'hard'
+
         this.setupMenuListeners();
     }
 
     setupMenuListeners() {
-        // Main menu buttons
-        document.getElementById('start-game')?.addEventListener('click', () => {
+        // Main menu buttons - game mode selection
+        document.getElementById('vs-cpu-btn')?.addEventListener('click', () => {
+            this.gameMode = 'vsCPU';
+            this.showScreen('difficulty-select');
+        });
+
+        document.getElementById('vs-player-btn')?.addEventListener('click', () => {
+            this.gameMode = 'vsPlayer';
             this.showScreen('character-select');
         });
 
         document.getElementById('controls-btn')?.addEventListener('click', () => {
             this.showScreen('controls-screen');
+        });
+
+        // Difficulty selection
+        document.querySelectorAll('.difficulty-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                this.aiDifficulty = btn.dataset.difficulty;
+                this.showScreen('character-select');
+            });
+        });
+
+        document.getElementById('back-to-menu-btn')?.addEventListener('click', () => {
+            this.showScreen('main-menu');
         });
 
         document.getElementById('back-btn')?.addEventListener('click', () => {
@@ -82,7 +104,7 @@ class UIManager {
         document.getElementById(screenId)?.classList.add('active');
 
         // Play menu music when returning to menu screens
-        if (screenId === 'main-menu' || screenId === 'character-select' || screenId === 'controls-screen') {
+        if (screenId === 'main-menu' || screenId === 'character-select' || screenId === 'controls-screen' || screenId === 'difficulty-select') {
             this.audioManager.playMenuMusic();
         } else if (screenId === 'game-screen') {
             // Stop menu music during fight
@@ -204,7 +226,7 @@ class UIManager {
         this.showScreen('game-screen');
         // Game will be initialized by game.js
         if (window.game) {
-            window.game.initFight(this.selectedP1, this.selectedP2);
+            window.game.initFight(this.selectedP1, this.selectedP2, this.gameMode, this.aiDifficulty);
         }
     }
 

@@ -29,6 +29,7 @@ class InputManager {
 
     setupListeners() {
         window.addEventListener('keydown', (e) => {
+            console.log('Key pressed:', e.key); // DEBUG: Ver qué teclas se presionan
             this.keys[e.key.toLowerCase()] = true;
             this.keys[e.key] = true; // For arrow keys and numpad
 
@@ -62,9 +63,12 @@ class InputManager {
             character.moveRight();
         }
         if (this.isPressed(controls.up)) {
-            character.jump();
-            // Prevent repeated jumps
-            this.keys[controls.up] = false;
+            console.log('UP KEY PRESSED! Player', playerNum); // DEBUG
+            // Only clear key if we actually try to jump
+            if (!character.isAttacking && !character.isHurt) {
+                character.jump();
+                this.keys[controls.up] = false;
+            }
         }
 
         // Attacks

@@ -25,8 +25,23 @@
             </h1>
             <div class="subtitle">COMBAT ARENA</div>
             <div class="menu-buttons">
-                <button class="menu-btn" id="start-game">INICIAR COMBATE</button>
+                <button class="menu-btn" id="vs-cpu-btn">VS CPU</button>
+                <button class="menu-btn" id="vs-player-btn">VS JUGADOR</button>
                 <button class="menu-btn" id="controls-btn">CONTROLES</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Difficulty Selection -->
+    <div id="difficulty-select" class="screen">
+        <div class="stars"></div>
+        <h2 class="select-title">SELECCIONA DIFICULTAD</h2>
+        <div class="menu-content">
+            <div class="menu-buttons">
+                <button class="menu-btn difficulty-btn" data-difficulty="easy">FÁCIL</button>
+                <button class="menu-btn difficulty-btn" data-difficulty="medium">NORMAL</button>
+                <button class="menu-btn difficulty-btn" data-difficulty="hard">DIFÍCIL</button>
+                <button class="menu-btn" id="back-to-menu-btn">VOLVER</button>
             </div>
         </div>
     </div>
@@ -198,6 +213,7 @@
     <script src="input.js"></script>
     <script src="combat.js"></script>
     <script src="audio.js"></script>
+    <script src="ai.js"></script>
     <script src="ui.js"></script>
     <script src="game.js"></script>
 </body>

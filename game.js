@@ -14,9 +14,15 @@ class Game {
         this.combatManager = new CombatManager(this.effectsManager);
         this.uiManager = new UIManager();
 
-        // Game state
+        // Players
         this.player1 = null;
         this.player2 = null;
+
+        // Game mode
+        this.gameMode = 'vsPlayer'; // 'vsPlayer' or 'vsCPU'
+        this.aiOpponent = null; // AI instance for CPU mode
+
+        // Game state
         this.gameState = 'menu'; // menu, fighting, paused, roundEnd, gameOver
         this.currentRound = 1;
         this.roundTimer = CONFIG.ROUND_TIME;
@@ -28,35 +34,61 @@ class Game {
         this.deltaTime = 0;
 
         // Background
-        this.setupBackground();
+        this.initBackground();
 
         // Start game loop
         this.loop();
     }
 
-    setupBackground() {
-        // Create gradient background
+    initBackground() {
+        // Create epic Halo Infinite-inspired gradient
         this.bgGradient = this.ctx.createLinearGradient(0, 0, 0, CONFIG.CANVAS_HEIGHT);
-        this.bgGradient.addColorStop(0, '#001a33');
-        this.bgGradient.addColorStop(0.5, '#000a1a');
-        this.bgGradient.addColorStop(1, '#000510');
+        this.bgGradient.addColorStop(0, '#0a0e1a');      // Deep space blue
+        this.bgGradient.addColorStop(0.3, '#1a2540');    // Darker blue
+        this.bgGradient.addColorStop(0.6, '#2d3a5c');    // Mid blue
+        this.bgGradient.addColorStop(1, '#0f1419');      // Almost black
 
-        // Stars
+        // Create hexagonal tech pattern stars
         this.stars = [];
-        for (let i = 0; i < 100; i++) {
+        for (let i = 0; i < 150; i++) {
             this.stars.push({
                 x: Math.random() * CONFIG.CANVAS_WIDTH,
-                y: Math.random() * CONFIG.CANVAS_HEIGHT,
+                y: Math.random() * CONFIG.CANVAS_HEIGHT * 0.7, // Only in upper portion
                 size: Math.random() * 2 + 0.5,
-                opacity: Math.random()
+                opacity: Math.random() * 0.5 + 0.3,
+                twinkleSpeed: Math.random() * 0.002 + 0.001
+            });
+        }
+
+        // Create energy rings (Halo rings in background)
+        this.energyRings = [];
+        for (let i = 0; i < 3; i++) {
+            this.energyRings.push({
+                x: CONFIG.CANVAS_WIDTH * (0.3 + i * 0.2),
+                y: CONFIG.CANVAS_HEIGHT * 0.25,
+                radius: 80 + i * 40,
+                opacity: 0.1 - i * 0.03,
+                speed: 0.0005 + i * 0.0002,
+                angle: Math.random() * Math.PI * 2
             });
         }
     }
 
-    initFight(char1Type, char2Type) {
+    initFight(char1Type, char2Type, gameMode = 'vsPlayer', aiDifficulty = 'easy') {
+        // Set game mode
+        this.gameMode = gameMode;
+
         // Create characters based on selection
         this.player1 = this.createCharacter(char1Type, 200, CONFIG.GROUND_Y, 1, 1);
         this.player2 = this.createCharacter(char2Type, CONFIG.CANVAS_WIDTH - 300, CONFIG.GROUND_Y, -1, 2);
+
+        // Initialize AI if in CPU mode
+        if (this.gameMode === 'vsCPU') {
+            this.aiOpponent = new AI(aiDifficulty);
+            console.log(`AI initialized with difficulty: ${aiDifficulty}`);
+        } else {
+            this.aiOpponent = null;
+        }
 
         // Update UI
         this.uiManager.updatePlayerNames(this.player1.name, this.player2.name);
@@ -100,9 +132,23 @@ class Game {
     update(deltaTime) {
         if (this.gameState !== 'fighting') return;
 
-        // Handle input
+        // Handle physics
+        Physics.applyGravity(this.player1, deltaTime);
+        Physics.applyGravity(this.player2, deltaTime);
+        Physics.updatePosition(this.player1);
+        Physics.updatePosition(this.player2);
+
+        // Handle player input
         this.inputManager.handleCharacterInput(this.player1, 1);
-        this.inputManager.handleCharacterInput(this.player2, 2);
+
+        // Handle player 2 input OR AI
+        if (this.gameMode === 'vsCPU' && this.aiOpponent) {
+            // AI controls player 2
+            this.aiOpponent.update(this.player2, this.player1, deltaTime);
+        } else {
+            // Human controls player 2
+            this.inputManager.handleCharacterInput(this.player2, 2);
+        }
 
         // Update characters
         this.player1.update(deltaTime, this.player2);
@@ -165,8 +211,12 @@ class Game {
         // Update wins
         if (winner === this.player1) {
             this.p1Wins++;
+            this.roundWinner = 1;
         } else if (winner === this.player2) {
             this.p2Wins++;
+            this.roundWinner = 2;
+        } else {
+            this.roundWinner = 0; // Draw
         }
 
         // Show message
@@ -180,26 +230,26 @@ class Game {
             } else if (this.p2Wins >= 2) {
                 this.endGame(this.player2);
             } else {
-                this.nextRound();
+                this.resetRound();
             }
         }, 2500);
     }
 
-    nextRound() {
+    resetRound() {
+        // Start next round
         this.currentRound++;
-        this.uiManager.updateRound(this.currentRound);
-
-        // Reset characters
         this.player1.reset(200, CONFIG.GROUND_Y);
         this.player2.reset(CONFIG.CANVAS_WIDTH - 300, CONFIG.GROUND_Y);
-
-        // Reset timer
         this.roundTimer = CONFIG.ROUND_TIME;
-
-        // Clear effects
+        this.gameState = 'fighting';
         this.effectsManager.clear();
 
-        // Show message and resume
+        // Reset AI if in CPU mode
+        if (this.aiOpponent) {
+            this.aiOpponent.reset();
+        }
+
+        this.uiManager.updateRound(this.currentRound);
         this.uiManager.showMessage(`ROUND ${this.currentRound}`, 1500);
         setTimeout(() => {
             this.gameState = 'fighting';
@@ -213,31 +263,101 @@ class Game {
     }
 
     render() {
-        // Clear canvas
+        // Clear canvas with epic gradient
         this.ctx.fillStyle = this.bgGradient;
         this.ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
 
-        // Draw stars
-        this.stars.forEach(star => {
-            this.ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
-            this.ctx.fillRect(star.x, star.y, star.size, star.size);
+        // Draw energy rings (animated Halo rings)
+        this.energyRings.forEach(ring => {
+            ring.angle += ring.speed;
+
+            this.ctx.save();
+            this.ctx.globalAlpha = ring.opacity;
+            this.ctx.strokeStyle = '#00d4ff';
+            this.ctx.lineWidth = 3;
+            this.ctx.setLineDash([10, 10]);
+            this.ctx.beginPath();
+            this.ctx.ellipse(
+                ring.x,
+                ring.y,
+                ring.radius,
+                ring.radius * 0.3,
+                ring.angle,
+                0,
+                Math.PI * 2
+            );
+            this.ctx.stroke();
+            this.ctx.restore();
         });
 
-        // Draw ground
-        const groundGradient = this.ctx.createLinearGradient(0, CONFIG.GROUND_Y + 20, 0, CONFIG.CANVAS_HEIGHT);
-        groundGradient.addColorStop(0, '#1a3a4a');
-        groundGradient.addColorStop(1, '#0d1f2a');
-        this.ctx.fillStyle = groundGradient;
-        this.ctx.fillRect(0, CONFIG.GROUND_Y + 80, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+        // Draw twinkling stars
+        this.stars.forEach(star => {
+            // Twinkle effect
+            star.opacity += star.twinkleSpeed;
+            if (star.opacity > 0.8 || star.opacity < 0.3) {
+                star.twinkleSpeed *= -1;
+            }
 
-        // Ground line
+            this.ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
+            this.ctx.fillRect(star.x, star.y, star.size, star.size);
+
+            // Add glow to some stars
+            if (star.size > 1.5) {
+                this.ctx.fillStyle = `rgba(0, 212, 255, ${star.opacity * 0.3})`;
+                this.ctx.fillRect(star.x - 1, star.y - 1, star.size + 2, star.size + 2);
+            }
+        });
+
+        // Draw hexagonal tech pattern in upper area
+        this.ctx.save();
+        this.ctx.globalAlpha = 0.05;
+        this.ctx.strokeStyle = '#00d4ff';
+        this.ctx.lineWidth = 1;
+        const hexSize = 40;
+        for (let x = 0; x < CONFIG.CANVAS_WIDTH; x += hexSize * 1.5) {
+            for (let y = 0; y < CONFIG.CANVAS_HEIGHT * 0.4; y += hexSize * 1.3) {
+                this.drawHexagon(x, y, hexSize);
+            }
+        }
+        this.ctx.restore();
+
+        // Draw futuristic platform/ground
+        const platformY = CONFIG.GROUND_Y + 60;
+
+        // Platform shadow/depth
+        const depthGrad = this.ctx.createLinearGradient(0, platformY - 20, 0, CONFIG.CANVAS_HEIGHT);
+        depthGrad.addColorStop(0, 'rgba(10, 20, 40, 0.8)');
+        depthGrad.addColorStop(1, 'rgba(5, 10, 20, 0.95)');
+        this.ctx.fillStyle = depthGrad;
+        this.ctx.fillRect(0, platformY - 20, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+
+        // Platform main surface
+        const platformGrad = this.ctx.createLinearGradient(0, platformY, 0, platformY + 40);
+        platformGrad.addColorStop(0, '#1a3a4a');
+        platformGrad.addColorStop(0.5, '#0f2530');
+        platformGrad.addColorStop(1, '#0a1419');
+        this.ctx.fillStyle = platformGrad;
+        this.ctx.fillRect(0, platformY, CONFIG.CANVAS_WIDTH, 40);
+
+        // Glowing platform edge
         this.ctx.strokeStyle = '#00d4ff';
         this.ctx.lineWidth = 2;
-        this.ctx.globalAlpha = 0.5;
+        this.ctx.globalAlpha = 0.4 + Math.sin(Date.now() * 0.003) * 0.2; // Pulse effect
         this.ctx.beginPath();
-        this.ctx.moveTo(0, CONFIG.GROUND_Y + 80);
-        this.ctx.lineTo(CONFIG.CANVAS_WIDTH, CONFIG.GROUND_Y + 80);
+        this.ctx.moveTo(0, platformY);
+        this.ctx.lineTo(CONFIG.CANVAS_WIDTH, platformY);
         this.ctx.stroke();
+
+        // Tech details on platform
+        this.ctx.globalAlpha = 0.3;
+        this.ctx.strokeStyle = '#00ff88';
+        this.ctx.lineWidth = 1;
+        for (let x = 50; x < CONFIG.CANVAS_WIDTH; x += 100) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(x, platformY + 10);
+            this.ctx.lineTo(x + 30, platformY + 10);
+            this.ctx.stroke();
+        }
         this.ctx.globalAlpha = 1;
 
         // Apply screen shake
@@ -245,14 +365,28 @@ class Game {
         this.ctx.save();
         this.ctx.translate(shake.x, shake.y);
 
-        // Draw characters
-        if (this.player1) this.player1.render(this.ctx);
-        if (this.player2) this.player2.render(this.ctx);
-
-        // Draw effects
+        // Characters and effects
+        this.player1?.render(this.ctx);
+        this.player2?.render(this.ctx);
         this.effectsManager.render(this.ctx);
 
         this.ctx.restore();
+    }
+
+    drawHexagon(x, y, size) {
+        this.ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+            const angle = (Math.PI / 3) * i;
+            const hx = x + size * Math.cos(angle);
+            const hy = y + size * Math.sin(angle);
+            if (i === 0) {
+                this.ctx.moveTo(hx, hy);
+            } else {
+                this.ctx.lineTo(hx, hy);
+            }
+        }
+        this.ctx.closePath();
+        this.ctx.stroke();
     }
 
     loop(currentTime = 0) {

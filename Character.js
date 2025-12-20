@@ -272,13 +272,16 @@ class Character {
     }
 
     jump() {
+        console.log('Jump called! isAttacking:', this.isAttacking, 'isHurt:', this.isHurt, 'isOnGround:', this.isOnGround()); // DEBUG
         if (!this.isAttacking && !this.isHurt) {
             if (this.isOnGround()) {
                 this.velocityY = this.jumpForce;
                 this.isJumping = true;
+                console.log('JUMPING! velocityY:', this.velocityY); // DEBUG
             } else if (this.canDoubleJump) {
                 this.velocityY = this.jumpForce * 0.8;
                 this.canDoubleJump = false;
+                console.log('DOUBLE JUMP! velocityY:', this.velocityY); // DEBUG
             }
         }
     }

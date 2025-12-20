@@ -6,7 +6,7 @@ const CONFIG = {
 
     // Physics
     GRAVITY: 0.8,
-    GROUND_Y: 480, // Pies alineados con la línea visual del suelo (y=480)
+    GROUND_Y: 420, // Posición del suelo (más arriba para mejor composición visual)
     FRICTION: 0.85,
 
     // Game settings
