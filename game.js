@@ -33,19 +33,14 @@ class Game {
         this.lastTime = 0;
         this.deltaTime = 0;
 
-        // Background video
-        this.backgroundVideo = document.createElement('video');
-        this.backgroundVideo.src = 'assets/video/fontvideo.mp4';
-        this.backgroundVideo.loop = true;
-        this.backgroundVideo.muted = true;
-        this.backgroundVideo.autoplay = true;
-        this.backgroundVideo.playsInline = true; // For mobile devices
-        this.backgroundVideo.play().catch(err => console.log('Video autoplay prevented:', err));
-        this.videoReady = false;
-        this.backgroundVideo.addEventListener('loadeddata', () => {
-            this.videoReady = true;
-            console.log('Background video loaded successfully');
-        });
+        // Background wallpaper
+        this.backgroundImage = new Image();
+        this.backgroundImage.src = 'assets/images/wallpaper.png';
+        this.backgroundReady = false;
+        this.backgroundImage.onload = () => {
+            this.backgroundReady = true;
+            console.log('Background wallpaper loaded successfully');
+        };
 
         // Background
         this.initBackground();
@@ -153,11 +148,8 @@ class Game {
             return;
         }
 
-        // Handle physics
-        Physics.applyGravity(this.player1, deltaTime);
-        Physics.applyGravity(this.player2, deltaTime);
-        Physics.updatePosition(this.player1);
-        Physics.updatePosition(this.player2);
+        // NOTA: La física se maneja dentro de player.update()
+        // No llamamos a Physics.applyGravity/updatePosition aquí para evitar doble aplicación
 
         // Handle player input
         this.inputManager.handleCharacterInput(this.player1, 1);
@@ -284,12 +276,12 @@ class Game {
     }
 
     render() {
-        // Draw background video or fallback gradient
-        if (this.videoReady && this.backgroundVideo.readyState >= 2) {
-            // Draw video at full canvas size
-            this.ctx.drawImage(this.backgroundVideo, 0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+        // Draw background wallpaper or fallback gradient
+        if (this.backgroundReady) {
+            // Draw wallpaper at full canvas size
+            this.ctx.drawImage(this.backgroundImage, 0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
         } else {
-            // Fallback to gradient while video loads
+            // Fallback to gradient while image loads
             this.ctx.fillStyle = this.bgGradient;
             this.ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
         }
@@ -348,6 +340,8 @@ class Game {
         }
         this.ctx.restore();
 
+        // Platform removed - using wallpaper background instead
+        /*
         // Draw futuristic platform/ground
         const platformY = CONFIG.GROUND_Y + 60;
 
@@ -386,6 +380,8 @@ class Game {
             this.ctx.stroke();
         }
         this.ctx.globalAlpha = 1;
+        */
+
 
         // Apply screen shake
         const shake = Utils.screenShake.update(this.deltaTime);

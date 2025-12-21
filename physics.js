@@ -1,14 +1,18 @@
 // Physics Engine
 class Physics {
     static applyGravity(character) {
-        // Check if character's feet are at or below ground
-        if (character.y + character.height < CONFIG.GROUND_Y) {
+        // Check if character is in the air or moving up (jumping)
+        // We add a small buffer (5px) or check if velocity is negative (jumping)
+        if (character.y + character.height < CONFIG.GROUND_Y || character.velocityY < 0) {
             character.velocityY += CONFIG.GRAVITY;
         } else {
-            character.y = CONFIG.GROUND_Y - character.height;
-            character.velocityY = 0;
-            character.isJumping = false;
-            character.canDoubleJump = true;
+            // Only snap to ground if falling or standing still
+            if (character.velocityY >= 0) {
+                character.y = CONFIG.GROUND_Y - character.height;
+                character.velocityY = 0;
+                character.isJumping = false;
+                character.canDoubleJump = true;
+            }
         }
     }
 
@@ -25,8 +29,6 @@ class Physics {
         character.x += character.velocityX;
         character.y += character.velocityY;
 
-        console.log('After velocity: y=', character.y, 'velocityY=', character.velocityY, 'GROUND_Y=', CONFIG.GROUND_Y); // DEBUG
-
         // Keep character on screen
         character.x = Utils.clamp(character.x, 0, CONFIG.CANVAS_WIDTH - character.width);
 
@@ -34,7 +36,6 @@ class Physics {
         if (character.y + character.height >= CONFIG.GROUND_Y) {
             character.y = CONFIG.GROUND_Y - character.height;
             character.velocityY = 0;
-            console.log('GROUND COLLISION! Setting y to', character.y); // DEBUG
         }
     }
 

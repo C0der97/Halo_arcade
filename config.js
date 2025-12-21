@@ -6,7 +6,7 @@ const CONFIG = {
 
     // Physics
     GRAVITY: 0.8,
-    GROUND_Y: 420, // Posición del suelo (más arriba para mejor composición visual)
+    GROUND_Y: 480, // Posición del suelo (más abajo para que personajes estén en el suelo)
     FRICTION: 0.85,
 
     // Game settings
