@@ -4,6 +4,9 @@ class InputManager {
         // Keyboard state
         this.keys = {};
 
+        // Track keys that were just pressed (for one-shot actions like attacks)
+        this.justPressed = {};
+
         // Gamepad state
         this.gamepads = {};
         this.gamepadButtonsPressed = {}; // Track previous frame button state
@@ -60,6 +63,12 @@ class InputManager {
     setupListeners() {
         // Keyboard listeners
         window.addEventListener('keydown', (e) => {
+            // Track if key was JUST pressed (not held)
+            if (!this.keys[e.key.toLowerCase()] && !this.keys[e.key]) {
+                this.justPressed[e.key.toLowerCase()] = true;
+                this.justPressed[e.key] = true;
+            }
+
             this.keys[e.key.toLowerCase()] = true;
             this.keys[e.key] = true; // For arrow keys and numpad
 
@@ -120,6 +129,20 @@ class InputManager {
 
     isPressed(key) {
         return this.keys[key] || false;
+    }
+
+    // Check if key was just pressed (one-shot) and consume the flag
+    consumeJustPressed(key) {
+        const keyLower = key.toLowerCase ? key.toLowerCase() : key;
+
+        // Check both original case and lowercase
+        if (this.justPressed[key] || this.justPressed[keyLower]) {
+            // Clear both
+            this.justPressed[key] = false;
+            this.justPressed[keyLower] = false;
+            return true;
+        }
+        return false;
     }
 
     getGamepadInput(playerNum) {

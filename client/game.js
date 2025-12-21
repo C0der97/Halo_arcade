@@ -170,18 +170,9 @@ class Game {
             return;
         }
 
-        // NOTA: La física se maneja dentro de player.update()
-        // No llamamos a Physics.applyGravity/updatePosition aquí para evitar doble aplicación
-
-        // Handle player input
-        this.inputManager.handleCharacterInput(this.player1, 1);
-
-        // Handle player 2 input OR AI
-        if (this.gameMode === 'vsCPU' && this.aiOpponent) {
-            // AI controls player 2
-            this.aiOpponent.update(this.player2, this.player1, deltaTime);
-        } else if (this.isOnlineMode) {
-            // Online mode: collect input and send to server
+        // ONLINE MODE: Only send inputs to server, don't process locally
+        if (this.isOnlineMode) {
+            // Collect input based on which player we are
             const controls = this.myPlayerNumber === 1 ?
                 this.inputManager.player1Controls :
                 this.inputManager.player2Controls;
@@ -189,16 +180,33 @@ class Game {
             const input = {
                 left: this.inputManager.isPressed(controls.left),
                 right: this.inputManager.isPressed(controls.right),
-                up: this.inputManager.isPressed(controls.up),
+                up: this.inputManager.consumeJustPressed(controls.up),
                 down: this.inputManager.isPressed(controls.down),
-                punch: this.inputManager.isPressed(controls.punch),
-                kick: this.inputManager.isPressed(controls.kick),
-                special: this.inputManager.isPressed(controls.special),
+                punch: this.inputManager.consumeJustPressed(controls.punch),
+                kick: this.inputManager.consumeJustPressed(controls.kick),
+                special: this.inputManager.consumeJustPressed(controls.special),
                 block: this.inputManager.isPressed(controls.block)
             };
 
             this.networkManager.sendInput(input);
-            // Server handles physics, we just receive state
+
+            // In online mode, server handles all physics
+            // We just update effects and UI
+            this.effectsManager.update(deltaTime);
+            this.uiManager.updateHealth(1, this.player1.health, this.player1.maxHealth);
+            this.uiManager.updateHealth(2, this.player2.health, this.player2.maxHealth);
+            this.uiManager.updateTimer(this.roundTimer);
+            return;
+        }
+
+        // LOCAL MODE (VS Player or VS CPU)
+        // Handle player 1 input
+        this.inputManager.handleCharacterInput(this.player1, 1);
+
+        // Handle player 2 input OR AI
+        if (this.gameMode === 'vsCPU' && this.aiOpponent) {
+            // AI controls player 2
+            this.aiOpponent.update(this.player2, this.player1, deltaTime);
         } else {
             // Human controls player 2
             this.inputManager.handleCharacterInput(this.player2, 2);
@@ -395,7 +403,18 @@ class Game {
         this.uiManager.showScreen('game-screen');
         this.gameState = 'fighting';
 
-        this.uiManager.showMessage('Partida encontrada! Preparate...', 2000);
+        // Show and announce round start
+        this.uiManager.showMessage('RONDA 1', 1500);
+        if (this.audioManager) {
+            this.audioManager.playAnnouncement('Ronda 1');
+        }
+
+        setTimeout(() => {
+            this.uiManager.showMessage('¡PELEA!', 1000);
+            if (this.audioManager) {
+                this.audioManager.playAnnouncement('Fight!');
+            }
+        }, 1600);
     }
 
     updateFromServer(state) {
@@ -409,6 +428,7 @@ class Game {
             this.player1.facing = state.player1.facing;
             this.player1.isAttacking = state.player1.isAttacking;
             this.player1.isBlocking = state.player1.isBlocking;
+            this.player1.attackType = state.player1.attackType; // For correct sprite
         }
 
         if (this.player2) {
@@ -418,6 +438,7 @@ class Game {
             this.player2.facing = state.player2.facing;
             this.player2.isAttacking = state.player2.isAttacking;
             this.player2.isBlocking = state.player2.isBlocking;
+            this.player2.attackType = state.player2.attackType; // For correct sprite
         }
 
         this.roundTimer = state.roundTimer;

@@ -63,6 +63,23 @@ class GameRoom {
             const state = this.gameState.serialize();
             io.to(this.id).emit('gameState', state);
 
+            // Check for round end (emit only once)
+            if (this.gameState.gameState === 'roundEnd' && !this.roundEndEmitted) {
+                this.roundEndEmitted = true;
+                const winner = this.gameState.roundWinner;
+                console.log(`Round ${this.gameState.currentRound} Over! Winner: P${winner}`);
+                io.to(this.id).emit('roundOver', {
+                    winner,
+                    p1Health: this.gameState.player1.health,
+                    p2Health: this.gameState.player2.health
+                });
+            }
+
+            // Reset flag when game resumes
+            if (this.gameState.gameState === 'fighting') {
+                this.roundEndEmitted = false;
+            }
+
             // Check if game is over
             if (this.gameState.gameState === 'gameOver') {
                 this.stop();

@@ -60,6 +60,21 @@ class NetworkManager {
             }
         });
 
+        this.socket.on('roundOver', (data) => {
+            console.log(`Round Over! Winner: Player ${data.winner}`);
+            let message = data.winner === 0 ? '¡EMPATE!' :
+                `¡JUGADOR ${data.winner} GANA LA RONDA!`;
+            if (this.game.uiManager) {
+                this.game.uiManager.showMessage(message, 2500);
+            }
+            // Play winner announcement
+            if (this.game.audioManager) {
+                const announcement = data.winner === 1 ? 'Player One Wins!' :
+                    data.winner === 2 ? 'Player Two Wins!' : 'Draw!';
+                this.game.audioManager.playAnnouncement(announcement);
+            }
+        });
+
         this.socket.on('gameOver', (data) => {
             console.log(`Game Over! Winner: Player ${data.winner}`);
             if (this.game.onGameOver) {
@@ -69,8 +84,8 @@ class NetworkManager {
 
         this.socket.on('opponentDisconnected', () => {
             console.log('⚠️ Opponent disconnected');
-            alert('Tu oponente se desconectó. Volviendo al menú...');
-            this.game.returnToMenu();
+            // Reload page to return to menu cleanly
+            window.location.reload();
         });
 
         this.socket.on('error', (msg) => {
