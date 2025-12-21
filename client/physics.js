@@ -40,21 +40,45 @@ class Physics {
     }
 
     static resolveCollision(char1, char2) {
-        // Simple push-back when characters overlap
+        // Block characters from passing through each other without pushing
         const char1Box = char1.getHurtbox();
         const char2Box = char2.getHurtbox();
 
         if (Utils.checkCollision(char1Box, char2Box)) {
-            const overlapX = (char1Box.x + char1Box.width) - char2Box.x;
-            const overlapY = (char1Box.y + char1Box.height) - char2Box.y;
+            // Calculate overlap
+            const overlapX = Math.min(
+                char1Box.x + char1Box.width - char2Box.x,
+                char2Box.x + char2Box.width - char1Box.x
+            );
 
-            // Push characters apart on X axis
-            if (char1.x < char2.x) {
-                char1.x -= overlapX / 2;
-                char2.x += overlapX / 2;
-            } else {
-                char1.x += overlapX / 2;
-                char2.x -= overlapX / 2;
+            // Only separate if overlap is small (prevents teleporting)
+            if (overlapX < 30) {
+                // Move the character that was moving INTO the collision
+                if (char1.x < char2.x) {
+                    // char1 is on the left
+                    if (char1.velocityX > 0) {
+                        // char1 was moving right, stop it
+                        char1.x -= overlapX / 2;
+                        char1.velocityX = 0;
+                    }
+                    if (char2.velocityX < 0) {
+                        // char2 was moving left, stop it
+                        char2.x += overlapX / 2;
+                        char2.velocityX = 0;
+                    }
+                } else {
+                    // char1 is on the right
+                    if (char1.velocityX < 0) {
+                        // char1 was moving left, stop it
+                        char1.x += overlapX / 2;
+                        char1.velocityX = 0;
+                    }
+                    if (char2.velocityX > 0) {
+                        // char2 was moving right, stop it
+                        char2.x -= overlapX / 2;
+                        char2.velocityX = 0;
+                    }
+                }
             }
         }
     }
