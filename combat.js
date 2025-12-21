@@ -104,9 +104,11 @@ class CombatManager {
                         this.p2Combo.addHit(damage);
                     }
 
-                    // Play hit sound
+                    // Play hit sound (character-specific if available)
                     if (window.uiManager && window.uiManager.audioManager) {
-                        window.uiManager.audioManager.playSFX(attacker.attackType);
+                        // Get character type from name (e.g., "MASTER CHIEF" -> "master")
+                        const charType = attacker.name.toLowerCase().split(' ')[0];
+                        window.uiManager.audioManager.playCharacterHit(charType, attacker.attackType);
                     }
                 }
 

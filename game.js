@@ -13,6 +13,7 @@ class Game {
         this.effectsManager = new EffectsManager();
         this.combatManager = new CombatManager(this.effectsManager);
         this.uiManager = new UIManager();
+        this.audioManager = new AudioManager();
 
         // Players
         this.player1 = null;
@@ -111,8 +112,24 @@ class Game {
         this.currentRound = 1;
         this.effectsManager.clear();
 
-        // Show "FIGHT!" message
-        this.uiManager.showMessage('¡PELEA!', 1500);
+        // Show first round message and announce
+        this.uiManager.showMessage('RONDA 1', 1500);
+
+        // Announce first round
+        if (this.audioManager) {
+            this.audioManager.playAnnouncement('Ronda 1');
+        }
+
+        setTimeout(() => {
+            this.uiManager.showMessage('¡PELEA!', 1000);
+        }, 1500);
+
+        // Announce Fight
+        setTimeout(() => {
+            if (this.audioManager) {
+                this.audioManager.playAnnouncement('Fight!');
+            }
+        }, 1600);
     }
 
     createCharacter(type, x, y, facing, playerNum) {
@@ -232,9 +249,24 @@ class Game {
             this.roundWinner = 0; // Draw
         }
 
-        // Show message
-        const message = reason === 'EMPATE' ? '¡EMPATE!' : `${winner.name} GANA! (${reason})`;
+        // Show message and play announcement
+        let announcement = 'Draw!';
+        let message = '¡EMPATE!';
+
+        if (winner === this.player1) {
+            announcement = 'Player One Wins!';
+            message = `${winner.name} GANA! (${reason})`;
+        } else if (winner === this.player2) {
+            announcement = 'Player Two Wins!';
+            message = `${winner.name} GANA! (${reason})`;
+        }
+
         this.uiManager.showMessage(message, 2500);
+
+        // Play voice announcement
+        if (this.audioManager) {
+            this.audioManager.playAnnouncement(announcement);
+        }
 
         // Check if someone won the match
         setTimeout(() => {
@@ -263,16 +295,34 @@ class Game {
         }
 
         this.uiManager.updateRound(this.currentRound);
-        this.uiManager.showMessage(`ROUND ${this.currentRound}`, 1500);
+        this.uiManager.showMessage(`RONDA ${this.currentRound}`, 1500);
+
+        // Announce Round
+        if (this.audioManager) {
+            this.audioManager.playAnnouncement(`Ronda ${this.currentRound}`);
+        }
+
         setTimeout(() => {
             this.gameState = 'fighting';
             this.uiManager.showMessage('¡PELEA!', 1000);
         }, 1500);
+
+        // Announce Fight separately to ensure it plays
+        setTimeout(() => {
+            if (this.audioManager) {
+                this.audioManager.playAnnouncement('Fight!');
+            }
+        }, 1600);
     }
 
     endGame(winner) {
         this.gameState = 'gameOver';
         this.uiManager.showVictory(winner.name);
+
+        // Play victory announcement
+        if (this.audioManager) {
+            this.audioManager.playAnnouncement('Victoria');
+        }
     }
 
     render() {
