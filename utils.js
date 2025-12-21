@@ -45,6 +45,11 @@ const Utils = {
             this.timer = duration;
         },
 
+        // Alias for start() for compatibility
+        trigger(intensity, duration) {
+            this.start(intensity, duration);
+        },
+
         update(deltaTime) {
             if (this.timer > 0) {
                 this.timer -= deltaTime;

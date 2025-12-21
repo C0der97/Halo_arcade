@@ -33,6 +33,20 @@ class Game {
         this.lastTime = 0;
         this.deltaTime = 0;
 
+        // Background video
+        this.backgroundVideo = document.createElement('video');
+        this.backgroundVideo.src = 'assets/video/fontvideo.mp4';
+        this.backgroundVideo.loop = true;
+        this.backgroundVideo.muted = true;
+        this.backgroundVideo.autoplay = true;
+        this.backgroundVideo.playsInline = true; // For mobile devices
+        this.backgroundVideo.play().catch(err => console.log('Video autoplay prevented:', err));
+        this.videoReady = false;
+        this.backgroundVideo.addEventListener('loadeddata', () => {
+            this.videoReady = true;
+            console.log('Background video loaded successfully');
+        });
+
         // Background
         this.initBackground();
 
@@ -41,7 +55,7 @@ class Game {
     }
 
     initBackground() {
-        // Create epic Halo Infinite-inspired gradient
+        // Fallback gradient (used when video is loading or fails)
         this.bgGradient = this.ctx.createLinearGradient(0, 0, 0, CONFIG.CANVAS_HEIGHT);
         this.bgGradient.addColorStop(0, '#0a0e1a');      // Deep space blue
         this.bgGradient.addColorStop(0.3, '#1a2540');    // Darker blue
@@ -131,6 +145,13 @@ class Game {
 
     update(deltaTime) {
         if (this.gameState !== 'fighting') return;
+
+        // CRITICAL: Don't update physics/combat during hit freeze
+        if (this.effectsManager.isHitFrozen()) {
+            // Only update effects during hit freeze
+            this.effectsManager.update(deltaTime);
+            return;
+        }
 
         // Handle physics
         Physics.applyGravity(this.player1, deltaTime);
@@ -263,9 +284,15 @@ class Game {
     }
 
     render() {
-        // Clear canvas with epic gradient
-        this.ctx.fillStyle = this.bgGradient;
-        this.ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+        // Draw background video or fallback gradient
+        if (this.videoReady && this.backgroundVideo.readyState >= 2) {
+            // Draw video at full canvas size
+            this.ctx.drawImage(this.backgroundVideo, 0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+        } else {
+            // Fallback to gradient while video loads
+            this.ctx.fillStyle = this.bgGradient;
+            this.ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+        }
 
         // Draw energy rings (animated Halo rings)
         this.energyRings.forEach(ring => {
@@ -371,6 +398,9 @@ class Game {
         this.effectsManager.render(this.ctx);
 
         this.ctx.restore();
+
+        // Render combo counters (outside screen shake so they stay stable)
+        this.combatManager.renderCombos(this.ctx, CONFIG.CANVAS_WIDTH);
     }
 
     drawHexagon(x, y, size) {
