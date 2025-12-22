@@ -39,13 +39,15 @@ class Game {
         this.lastTime = 0;
         this.deltaTime = 0;
 
-        // Background wallpaper
+        // Background wallpaper - select random from available wallpapers
         this.backgroundImage = new Image();
-        this.backgroundImage.src = 'assets/images/wallpaper.png';
+        const wallpapers = ['wallpaper.png', 'wallpaper2.png'];
+        const randomWallpaper = wallpapers[Math.floor(Math.random() * wallpapers.length)];
+        this.backgroundImage.src = `assets/images/${randomWallpaper}`;
         this.backgroundReady = false;
         this.backgroundImage.onload = () => {
             this.backgroundReady = true;
-            console.log('Background wallpaper loaded successfully');
+            console.log(`Background wallpaper loaded: ${randomWallpaper}`);
         };
 
         // Background

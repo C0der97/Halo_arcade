@@ -15,18 +15,22 @@ class MasterChief extends Character {
         // Visual
         this.primaryColor = '#00ff88';
         this.secondaryColor = '#00aa55';
-        this.width = 100;  // Master Chief: 2.1m - Balanced size
-        this.height = 150; // Base size for proportional scaling
+        this.width = 130;  // Master Chief: Más grande (+30%)
+        this.height = 195; // +30% más grande
 
-        // Load individual sprites
-        this.loadIndividualSprites('chief');
+        // Load individual sprites with multi-frame configuration
+        this.loadIndividualSprites('chief', {
+            walk: 2,    // chief_walk1.png, chief_walk2.png
+            jump: 2,    // chief_jump1.png, chief_jump2.png
+            special: 3  // chief_special1.png to chief_special3.png
+        });
     }
 
     setupAnimations() {
-        // Simple animations (frame-based)
+        // Animations with new multi-frame sprites
         this.animationSystem.addAnimation('idle', [0], 200);
-        this.animationSystem.addAnimation('walk', [0, 1, 2, 1], 120);
-        this.animationSystem.addAnimation('jump', [0], 100);
+        this.animationSystem.addAnimation('walk', [0, 1, 0, 1], 120); // 2 frame walk cycle
+        this.animationSystem.addAnimation('jump', [0, 1], 100); // 2 frame jump
         this.animationSystem.addAnimation('attack', [0, 1, 2], 90);
         this.animationSystem.addAnimation('hurt', [0], 100);
         this.animationSystem.addAnimation('block', [0], 100);

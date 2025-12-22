@@ -46,40 +46,77 @@ class Character {
         this.secondaryColor = '#00cc66';
 
         // Individual sprite support (better than sprite sheets)
+        // Now supports arrays of sprites for multi-frame animations
         this.sprites = {
-            idle: null,
-            walk: null,
-            punch: null,
-            kick: null,
-            special: null,
-            block: null,
-            hurt: null,
-            jump: null
+            idle: [],
+            walk: [],
+            punch: [],
+            kick: [],
+            special: [],
+            block: [],
+            hurt: [],
+            jump: []
         };
         this.spritesLoaded = {};
         this.useSprites = false;
         this.spriteBaseName = ''; // e.g., 'chief', 'elite', 'brute'
+
+        // Frame configuration for each action (can be overridden per character)
+        this.spriteFrameConfig = {
+            idle: 1,
+            walk: 1,
+            punch: 1,
+            kick: 1,
+            special: 1,
+            block: 1,
+            hurt: 1,
+            jump: 1
+        };
     }
 
-    loadIndividualSprites(baseName) {
+    loadIndividualSprites(baseName, frameConfig = null) {
         this.spriteBaseName = baseName;
+
+        // Use custom frame config if provided
+        if (frameConfig) {
+            this.spriteFrameConfig = { ...this.spriteFrameConfig, ...frameConfig };
+        }
+
         const actions = ['idle', 'walk', 'punch', 'kick', 'special', 'block', 'hurt', 'jump'];
 
         actions.forEach(action => {
-            const img = new Image();
-            img.onload = () => {
-                this.spritesLoaded[action] = true;
-                // Enable sprites once we have at least idle loaded
-                if (action === 'idle') {
-                    this.useSprites = true;
+            const frameCount = this.spriteFrameConfig[action] || 1;
+            this.sprites[action] = [];
+            let loadedCount = 0;
+
+            for (let i = 0; i < frameCount; i++) {
+                const img = new Image();
+                const imgIndex = i; // Capture index for closure
+
+                img.onload = () => {
+                    loadedCount++;
+                    // Mark as loaded when all frames are loaded
+                    if (loadedCount === frameCount) {
+                        this.spritesLoaded[action] = true;
+                    }
+                    // Enable sprites once we have at least idle loaded
+                    if (action === 'idle' && loadedCount === frameCount) {
+                        this.useSprites = true;
+                    }
+                };
+                img.onerror = () => {
+                    console.warn(`Failed to load sprite: ${baseName}_${action}${frameCount > 1 ? (imgIndex + 1) : ''}.png`);
+                    this.spritesLoaded[action] = false;
+                };
+
+                // First frame uses just action name, additional frames use numbered suffix
+                if (frameCount === 1) {
+                    img.src = `assets/images/${baseName}_${action}.png`;
+                } else {
+                    img.src = `assets/images/${baseName}_${action}${i + 1}.png`;
                 }
-            };
-            img.onerror = () => {
-                console.warn(`Failed to load sprite: ${baseName}_${action}.png`);
-                this.spritesLoaded[action] = false;
-            };
-            img.src = `assets/images/${baseName}_${action}.png`;
-            this.sprites[action] = img;
+                this.sprites[action].push(img);
+            }
         });
     }
 
@@ -173,10 +210,21 @@ class Character {
     renderSprite(ctx) {
         // Get the appropriate sprite for current state
         const spriteAction = this.getSpriteAction();
-        const sprite = this.sprites[spriteAction];
+        const spriteArray = this.sprites[spriteAction];
 
         // Fallback to simple rendering if sprite not loaded
-        if (!sprite || !this.spritesLoaded[spriteAction]) {
+        if (!spriteArray || !spriteArray.length || !this.spritesLoaded[spriteAction]) {
+            this.renderSimple(ctx);
+            return;
+        }
+
+        // Get current animation frame
+        const currentFrame = this.animationSystem.getCurrentFrame();
+        // Clamp frame index to available sprites
+        const frameIndex = Math.min(currentFrame, spriteArray.length - 1);
+        const sprite = spriteArray[frameIndex];
+
+        if (!sprite || !sprite.complete) {
             this.renderSimple(ctx);
             return;
         }
@@ -187,8 +235,28 @@ class Character {
             ctx.filter = 'brightness(200%)';
         }
 
-        // Draw the sprite
-        ctx.drawImage(sprite, 0, 0, this.width, this.height);
+        // Calculate aspect-ratio-preserving dimensions
+        const spriteAspect = sprite.naturalWidth / sprite.naturalHeight;
+        const targetAspect = this.width / this.height;
+
+        let drawWidth, drawHeight, offsetX, offsetY;
+
+        if (spriteAspect > targetAspect) {
+            // Sprite is wider - fit to width
+            drawWidth = this.width;
+            drawHeight = this.width / spriteAspect;
+        } else {
+            // Sprite is taller - fit to height
+            drawHeight = this.height;
+            drawWidth = this.height * spriteAspect;
+        }
+
+        // Always align to center-bottom (feet on ground)
+        offsetX = (this.width - drawWidth) / 2;
+        offsetY = this.height - drawHeight;
+
+        // Draw the sprite with preserved aspect ratio
+        ctx.drawImage(sprite, offsetX, offsetY, drawWidth, drawHeight);
 
         // Reset filters
         ctx.globalCompositeOperation = 'source-over';

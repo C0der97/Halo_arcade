@@ -15,19 +15,28 @@ class Brute extends Character {
         // Visual
         this.primaryColor = '#ff3333';
         this.secondaryColor = '#aa0000';
-        this.width = 140;  // Brute: 2.7m - Much wider for massive gorilla-like build (+40% vs Chief)
-        this.height = 210; // +40% taller than Chief - truly imposing
+        this.width = 300;  // Brute: El más grande (sprite 800x800)
+        this.height = 300; // Cuadrado como su sprite
 
-        // Load individual sprites
-        this.loadIndividualSprites('brute');
+        // Load individual sprites with multi-frame configuration
+        // walk: 3 frames (brute_walk1.png, brute_walk2.png, brute_walk3.png)
+        // hurt: 2 frames (brute_hurt1.png, brute_hurt2.png)
+        // jump: 2 frames (brute_jump1.png, brute_jump2.png)
+        // punch: 3 frames (brute_punch1.png, brute_punch2.png, brute_punch3.png)
+        this.loadIndividualSprites('brute', {
+            walk: 3,
+            hurt: 2,
+            jump: 2,
+            special: 3  // Uses 3 frame special animation
+        });
     }
 
     setupAnimations() {
         this.animationSystem.addAnimation('idle', [0], 250); // Slower idle
-        this.animationSystem.addAnimation('walk', [0, 1, 2, 1], 150); // Heavy walk
-        this.animationSystem.addAnimation('jump', [0], 120);
+        this.animationSystem.addAnimation('walk', [0, 1, 2, 1], 150); // Heavy walk cycle using 3 frames
+        this.animationSystem.addAnimation('jump', [0, 1], 120); // Jump animation with 2 frames
         this.animationSystem.addAnimation('attack', [0, 1, 2], 110); // Slower but heavier attacks
-        this.animationSystem.addAnimation('hurt', [0], 100);
+        this.animationSystem.addAnimation('hurt', [0, 1, 0], 100); // Hurt animation alternating 2 frames
         this.animationSystem.addAnimation('block', [0], 100);
         this.animationSystem.play('idle');
     }
