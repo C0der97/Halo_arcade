@@ -52,6 +52,7 @@ class UIManager {
         });
 
         document.getElementById('controls-btn')?.addEventListener('click', () => {
+            this.updateControlsVisibility();
             this.showScreen('controls-screen');
         });
 
@@ -293,9 +294,38 @@ class UIManager {
     }
 
     showVictory(winnerName) {
+        // Wait 8 seconds to let victory video play before showing victory screen
         setTimeout(() => {
             this.showScreen('victory-screen');
             document.getElementById('winner-name').textContent = winnerName;
-        }, 2000);
+        }, 8000);
+    }
+
+    updateControlsVisibility() {
+        // Detect if gamepad is connected
+        const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+        let gamepadConnected = false;
+
+        for (let i = 0; i < gamepads.length; i++) {
+            if (gamepads[i] && gamepads[i].connected) {
+                gamepadConnected = true;
+                break;
+            }
+        }
+
+        const keyboardControls = document.getElementById('keyboard-controls');
+        const gamepadControls = document.getElementById('gamepad-controls');
+
+        if (keyboardControls && gamepadControls) {
+            if (gamepadConnected) {
+                // Show only gamepad controls
+                keyboardControls.style.display = 'none';
+                gamepadControls.style.display = 'block';
+            } else {
+                // Show only keyboard controls
+                keyboardControls.style.display = 'flex';
+                gamepadControls.style.display = 'none';
+            }
+        }
     }
 }

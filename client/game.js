@@ -39,16 +39,33 @@ class Game {
         this.lastTime = 0;
         this.deltaTime = 0;
 
-        // Background wallpaper - select random from available wallpapers
-        this.backgroundImage = new Image();
+        // Background wallpaper - always use image during gameplay
+        // Video will play on victory for Elite/Brute
+        this.backgroundReady = false;
+        this.useVideoBackground = false;
+
+        // Load image background (random between wallpaper.png and wallpaper2.png)
         const wallpapers = ['wallpaper.png', 'wallpaper2.png'];
         const randomWallpaper = wallpapers[Math.floor(Math.random() * wallpapers.length)];
+        this.backgroundImage = new Image();
         this.backgroundImage.src = `assets/images/${randomWallpaper}`;
-        this.backgroundReady = false;
         this.backgroundImage.onload = () => {
             this.backgroundReady = true;
-            console.log(`Background wallpaper loaded: ${randomWallpaper}`);
+            console.log(`Background image loaded: ${randomWallpaper}`);
         };
+
+        // Preload victory video for Elite/Brute wins
+        this.victoryVideo = document.createElement('video');
+        this.victoryVideo.src = 'assets/images/wallpaper.mp4';
+        this.victoryVideo.loop = true;
+        this.victoryVideo.muted = true;
+        this.victoryVideo.playsInline = true;
+        this.victoryVideoReady = false;
+        this.victoryVideo.oncanplay = () => {
+            this.victoryVideoReady = true;
+            console.log('Victory video preloaded: wallpaper.mp4');
+        };
+        this.victoryVideo.load();
 
         // Background
         this.initBackground();
@@ -118,6 +135,13 @@ class Game {
         this.p2Wins = 0;
         this.currentRound = 1;
         this.effectsManager.clear();
+
+        // Stop victory video if it was playing
+        this.useVideoBackground = false;
+        if (this.victoryVideo) {
+            this.victoryVideo.pause();
+            this.victoryVideo.currentTime = 0;
+        }
 
         // Show first round message and announce
         this.uiManager.showMessage('RONDA 1', 1500);
@@ -350,13 +374,44 @@ class Game {
     }
 
     endGame(winner) {
-        this.gameState = 'gameOver';
-        this.uiManager.showVictory(winner.name);
+        // Use 'victory' state to keep rendering but stop updates
+        this.gameState = 'victory';
+        this.victoryWinner = winner;
+
+        // Clear visual effects (hit flashes, etc.)
+        this.effectsManager.clear();
+
+        // Reset character visual states so they look normal during victory
+        if (this.player1) {
+            this.player1.isHurt = false;
+            this.player1.isAttacking = false;
+            this.player1.hurtTimer = 0;
+        }
+        if (this.player2) {
+            this.player2.isHurt = false;
+            this.player2.isAttacking = false;
+            this.player2.hurtTimer = 0;
+        }
 
         // Play victory announcement
         if (this.audioManager) {
             this.audioManager.playAnnouncement('Victoria');
         }
+
+        // Play victory video for Elite or Brute wins
+        const winnerName = winner.name.toUpperCase();
+        if ((winnerName === 'ELITE' || winnerName === 'BRUTE') && this.victoryVideoReady) {
+            // Start playing victory video as background after victoria announcement
+            setTimeout(() => {
+                this.useVideoBackground = true;
+                this.victoryVideo.currentTime = 0;
+                this.victoryVideo.play();
+                console.log(`Victory video playing for ${winnerName} win!`);
+            }, 500); // Small delay after "Victoria" announcement
+        }
+
+        // Show victory screen after delay
+        this.uiManager.showVictory(winner.name);
     }
 
     // ===== ONLINE MODE METHODS =====
@@ -470,12 +525,20 @@ class Game {
     }
 
     render() {
-        // Draw background wallpaper or fallback gradient
-        if (this.backgroundReady) {
-            // Draw wallpaper at full canvas size
-            this.ctx.drawImage(this.backgroundImage, 0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+        // Clear canvas first to prevent visual artifacts
+        this.ctx.clearRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+
+        // Draw background wallpaper (video or image) or fallback gradient
+        if (this.backgroundReady || this.useVideoBackground) {
+            if (this.useVideoBackground && this.victoryVideo) {
+                // Draw victory video at full canvas size
+                this.ctx.drawImage(this.victoryVideo, 0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+            } else if (this.backgroundImage) {
+                // Draw image at full canvas size
+                this.ctx.drawImage(this.backgroundImage, 0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+            }
         } else {
-            // Fallback to gradient while image loads
+            // Fallback to gradient while loading
             this.ctx.fillStyle = this.bgGradient;
             this.ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
         }

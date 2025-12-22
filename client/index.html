@@ -36,14 +36,14 @@
     <!-- Difficulty Selection -->
     <div id="difficulty-select" class="screen">
         <div class="stars"></div>
-        <h2 class="select-title">SELECCIONA DIFICULTAD</h2>
-        <div class="menu-content">
-            <div class="menu-buttons">
+        <div class="difficulty-wrapper">
+            <h2 class="select-title">SELECCIONA DIFICULTAD</h2>
+            <div class="difficulty-options">
                 <button class="menu-btn difficulty-btn" data-difficulty="easy">FÁCIL</button>
                 <button class="menu-btn difficulty-btn" data-difficulty="medium">NORMAL</button>
                 <button class="menu-btn difficulty-btn" data-difficulty="hard">DIFÍCIL</button>
-                <button class="menu-btn" id="back-to-menu-btn">VOLVER</button>
             </div>
+            <button class="menu-btn" id="back-to-menu-btn">VOLVER</button>
         </div>
     </div>
 
@@ -132,40 +132,46 @@
         <div class="stars"></div>
         <h2 class="select-title">CONTROLES</h2>
         <div class="controls-container">
-            <div class="control-section">
-                <h3>TECLADO - JUGADOR 1</h3>
-                <div class="control-list">
-                    <div class="control-item"><span>A / D</span> - Mover (izq/der)</div>
-                    <div class="control-item"><span>W</span> - Saltar</div>
-                    <div class="control-item"><span>G</span> - Puño</div>
-                    <div class="control-item"><span>H</span> - Patada</div>
-                    <div class="control-item"><span>J</span> - Especial</div>
-                    <div class="control-item"><span>ESPACIO</span> - Bloquear</div>
+            <!-- Keyboard controls -->
+            <div id="keyboard-controls">
+                <div class="control-section">
+                    <h3>TECLADO - JUGADOR 1</h3>
+                    <div class="control-list">
+                        <div class="control-item"><span>A / D</span> - Mover (izq/der)</div>
+                        <div class="control-item"><span>W</span> - Saltar</div>
+                        <div class="control-item"><span>G</span> - Puño</div>
+                        <div class="control-item"><span>H</span> - Patada</div>
+                        <div class="control-item"><span>J</span> - Especial</div>
+                        <div class="control-item"><span>ESPACIO</span> - Bloquear</div>
+                    </div>
+                </div>
+                <div class="control-section">
+                    <h3>TECLADO - JUGADOR 2</h3>
+                    <div class="control-list">
+                        <div class="control-item"><span>FLECHA IZQ/DER</span> - Mover</div>
+                        <div class="control-item"><span>FLECHA ARRIBA</span> - Saltar</div>
+                        <div class="control-item"><span>NUMPAD 1</span> - Puño</div>
+                        <div class="control-item"><span>NUMPAD 2</span> - Patada</div>
+                        <div class="control-item"><span>NUMPAD 3</span> - Especial</div>
+                        <div class="control-item"><span>NUMPAD 0</span> - Bloquear</div>
+                    </div>
                 </div>
             </div>
-            <div class="control-section">
-                <h3>TECLADO - JUGADOR 2</h3>
-                <div class="control-list">
-                    <div class="control-item"><span>FLECHA IZQ/DER</span> - Mover</div>
-                    <div class="control-item"><span>FLECHA ARRIBA</span> - Saltar</div>
-                    <div class="control-item"><span>NUMPAD 1</span> - Puño</div>
-                    <div class="control-item"><span>NUMPAD 2</span> - Patada</div>
-                    <div class="control-item"><span>NUMPAD 3</span> - Especial</div>
-                    <div class="control-item"><span>NUMPAD 0</span> - Bloquear</div>
-                </div>
-            </div>
-            <div class="control-section gamepad-section">
-                <h3>🎮 GAMEPAD / CONTROL</h3>
-                <div class="control-list">
-                    <div class="control-item"><span>D-PAD / STICK IZQ</span> - Mover</div>
-                    <div class="control-item"><span>A (Xbox) / X (PS)</span> - Puño</div>
-                    <div class="control-item"><span>B (Xbox) / ○ (PS)</span> - Patada</div>
-                    <div class="control-item"><span>X (Xbox) / □ (PS)</span> - Especial</div>
-                    <div class="control-item"><span>Y (Xbox) / △ (PS)</span> - Saltar</div>
-                    <div class="control-item"><span>LB/RB (Xbox) / L1/R1 (PS)</span> - Bloquear</div>
-                </div>
-                <div class="gamepad-note">
-                    <small>💡 Jugador 1 usa Gamepad 1, Jugador 2 usa Gamepad 2</small>
+            <!-- Gamepad controls -->
+            <div id="gamepad-controls">
+                <div class="control-section gamepad-section">
+                    <h3>🎮 GAMEPAD / CONTROL</h3>
+                    <div class="control-list">
+                        <div class="control-item"><span>D-PAD / STICK IZQ</span> - Mover</div>
+                        <div class="control-item"><span>A (Xbox) / X (PS)</span> - Puño</div>
+                        <div class="control-item"><span>B (Xbox) / ○ (PS)</span> - Patada</div>
+                        <div class="control-item"><span>X (Xbox) / □ (PS)</span> - Especial</div>
+                        <div class="control-item"><span>Y (Xbox) / △ (PS)</span> - Saltar</div>
+                        <div class="control-item"><span>LB/RB (Xbox) / L1/R1 (PS)</span> - Bloquear</div>
+                    </div>
+                    <div class="gamepad-note">
+                        <small>💡 Jugador 1 usa Gamepad 1, Jugador 2 usa Gamepad 2</small>
+                    </div>
                 </div>
             </div>
         </div>

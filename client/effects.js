@@ -337,5 +337,6 @@ class EffectsManager {
         this.hitFreezeTimer = 0;
         this.timeScale = 1.0;
         this.screenFlash.active = false;
+        this.screenFlash.alpha = 0;
     }
 }
