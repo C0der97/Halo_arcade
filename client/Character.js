@@ -72,6 +72,18 @@ class Character {
             hurt: 1,
             jump: 1
         };
+
+        // Scale configuration for each action (1.0 = normal, >1 = bigger)
+        this.spriteScaleConfig = {
+            idle: 1.0,
+            walk: 1.0,
+            punch: 1.0,
+            kick: 1.0,
+            special: 1.0,
+            block: 1.0,
+            hurt: 1.0,
+            jump: 1.0
+        };
     }
 
     loadIndividualSprites(baseName, frameConfig = null) {
@@ -235,6 +247,9 @@ class Character {
             ctx.filter = 'brightness(200%)';
         }
 
+        // Get scale multiplier for this action
+        const scaleMultiplier = this.spriteScaleConfig[spriteAction] || 1.0;
+
         // Calculate aspect-ratio-preserving dimensions
         const spriteAspect = sprite.naturalWidth / sprite.naturalHeight;
         const targetAspect = this.width / this.height;
@@ -250,6 +265,10 @@ class Character {
             drawHeight = this.height;
             drawWidth = this.height * spriteAspect;
         }
+
+        // Apply scale multiplier
+        drawWidth *= scaleMultiplier;
+        drawHeight *= scaleMultiplier;
 
         // Always align to center-bottom (feet on ground)
         offsetX = (this.width - drawWidth) / 2;

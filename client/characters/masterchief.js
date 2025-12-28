@@ -20,16 +20,19 @@ class MasterChief extends Character {
 
         // Load individual sprites with multi-frame configuration
         this.loadIndividualSprites('chief', {
-            walk: 2,    // chief_walk1.png, chief_walk2.png
+            walk: 7,    // chief_walk1.png to chief_walk7.png
             jump: 2,    // chief_jump1.png, chief_jump2.png
             special: 3  // chief_special1.png to chief_special3.png
         });
+
+        // Scale walk sprites to match idle/other actions size
+        this.spriteScaleConfig.walk = 1.13;
     }
 
     setupAnimations() {
         // Animations with new multi-frame sprites
         this.animationSystem.addAnimation('idle', [0], 200);
-        this.animationSystem.addAnimation('walk', [0, 1, 0, 1], 120); // 2 frame walk cycle
+        this.animationSystem.addAnimation('walk', [0, 1, 2, 3, 4, 5, 6], 100); // 7 frame walk cycle
         this.animationSystem.addAnimation('jump', [0, 1], 100); // 2 frame jump
         this.animationSystem.addAnimation('attack', [0, 1, 2], 90);
         this.animationSystem.addAnimation('hurt', [0], 100);
