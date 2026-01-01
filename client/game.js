@@ -147,9 +147,9 @@ class Game {
         this.uiManager.showMessage('RONDA 1', 1500);
 
         // Announce first round
-        if (this.audioManager) {
+        /*if (this.audioManager) {
             this.audioManager.playAnnouncement('Ronda 1');
-        }
+        }*/
 
         setTimeout(() => {
             this.uiManager.showMessage('¡PELEA!', 1000);
@@ -158,7 +158,7 @@ class Game {
         // Announce Fight
         setTimeout(() => {
             if (this.audioManager) {
-                this.audioManager.playAnnouncement('Fight!');
+                // this.audioManager.playAnnouncement('Fight!');
             }
         }, 1600);
     }
@@ -322,9 +322,9 @@ class Game {
         this.uiManager.showMessage(message, 2500);
 
         // Play voice announcement
-        if (this.audioManager) {
+        /*if (this.audioManager) {
             this.audioManager.playAnnouncement(announcement);
-        }
+        }*/
 
         // Check if someone won the match
         setTimeout(() => {
@@ -356,9 +356,9 @@ class Game {
         this.uiManager.showMessage(`RONDA ${this.currentRound}`, 1500);
 
         // Announce Round
-        if (this.audioManager) {
+        /*if (this.audioManager) {
             this.audioManager.playAnnouncement(`Ronda ${this.currentRound}`);
-        }
+        }*/
 
         setTimeout(() => {
             this.gameState = 'fighting';
@@ -368,7 +368,7 @@ class Game {
         // Announce Fight separately to ensure it plays
         setTimeout(() => {
             if (this.audioManager) {
-                this.audioManager.playAnnouncement('Fight!');
+                // this.audioManager.playAnnouncement('Fight!');
             }
         }, 1600);
     }
@@ -394,9 +394,9 @@ class Game {
         }
 
         // Play victory announcement
-        if (this.audioManager) {
+        /*if (this.audioManager) {
             this.audioManager.playAnnouncement('Victoria');
-        }
+        }*/
 
         // Play victory video for Elite or Brute wins
         const winnerName = winner.name.toUpperCase();
@@ -653,7 +653,7 @@ class Game {
         this.ctx.restore();
 
         // Render combo counters (outside screen shake so they stay stable)
-        this.combatManager.renderCombos(this.ctx, CONFIG.CANVAS_WIDTH);
+        this.combatManager.renderProjectiles(this.ctx, CONFIG.CANVAS_WIDTH);
     }
 
     drawHexagon(x, y, size) {

@@ -68,11 +68,11 @@ class NetworkManager {
                 this.game.uiManager.showMessage(message, 2500);
             }
             // Play winner announcement
-            if (this.game.audioManager) {
+            /*if (this.game.audioManager) {
                 const announcement = data.winner === 1 ? 'Player One Wins!' :
                     data.winner === 2 ? 'Player Two Wins!' : 'Draw!';
                 this.game.audioManager.playAnnouncement(announcement);
-            }
+            }*/
         });
 
         this.socket.on('gameOver', (data) => {

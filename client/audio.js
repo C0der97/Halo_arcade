@@ -12,9 +12,10 @@ class AudioManager {
 
     init() {
         // Load menu music
-        this.menuMusic = new Audio('assets/sounds/menu.mp3');
-        this.menuMusic.loop = true;
-        this.menuMusic.volume = this.musicVolume;
+        // Load menu music
+        // this.menuMusic = new Audio('assets/sounds/menu.mp3');
+        // this.menuMusic.loop = true;
+        // this.menuMusic.volume = this.musicVolume;
 
         // Initialize AudioContext early to avoid issues
         try {
@@ -25,6 +26,8 @@ class AudioManager {
     }
 
     playMenuMusic() {
+        if (!this.menuMusic) return; // Skip if music not loaded
+
         if (this.currentMusic === this.menuMusic && !this.menuMusic.paused) {
             return; // Already playing
         }

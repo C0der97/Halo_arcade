@@ -6,6 +6,9 @@ class CombatManager {
         // Combo tracking per player
         this.p1Combo = null;
         this.p2Combo = null;
+
+        // Projectiles
+        this.projectiles = [];
     }
 
     initCombos() {
@@ -151,20 +154,131 @@ class CombatManager {
             this.p1Combo.reset();
         }
 
+        this.checkProjectileSpawn(player1);
+        this.checkProjectileSpawn(player2);
+
+        this.updateProjectiles(16, player1, player2);
+
         return {
             player1Hit: p1Hit,
             player2Hit: p2Hit
         };
     }
 
-    // Render combo counters
-    renderCombos(ctx, canvasWidth) {
+    checkProjectileSpawn(attacker) {
+        if (attacker.name === 'BRUTE' && attacker.isAttacking && attacker.attackType === 'kick') {
+            // Spawn on frame 1 (visual firing point)
+            const currentFrame = attacker.animationSystem.currentFrame;
+            if (currentFrame === 1 && !attacker.hasFiredProjectile) {
+                // Determine spawn position (gun barrel tip)
+                const spawnX = attacker.x + (attacker.facing === 1 ? 160 : -10); // Offset based on sprite width/2 + arm
+                const spawnY = attacker.y + 110; // Approx gun height
+
+                this.createProjectile(attacker, spawnX, spawnY);
+                attacker.hasFiredProjectile = true;
+
+                // Sound
+                if (window.uiManager && window.uiManager.audioManager) {
+                    window.uiManager.audioManager.playSFX('special');
+                }
+            }
+        }
+    }
+
+    createProjectile(owner, x, y) {
+        this.projectiles.push({
+            owner: owner,
+            x: x,
+            y: y,
+            vx: owner.facing * 15, // Speed
+            vy: 0, // Straight shot
+            life: 1000,
+            damage: 8, // Plasma damage
+            direction: owner.facing,
+            width: 20,
+            height: 10
+        });
+    }
+
+    updateProjectiles(deltaTime, p1, p2) {
+        for (let i = this.projectiles.length - 1; i >= 0; i--) {
+            const p = this.projectiles[i];
+
+            // Move
+            p.x += p.vx;
+            p.life -= deltaTime;
+
+            // Check OOB or death
+            if (p.life <= 0 || p.x < -100 || p.x > 2000) {
+                this.projectiles.splice(i, 1);
+                continue;
+            }
+
+            // Check collision with opponent
+            const opponent = p.owner === p1 ? p2 : p1;
+            const hurtbox = opponent.getHurtbox();
+
+            // Simple AABB for projectile
+            const projBox = { x: p.x - 10, y: p.y - 10, width: 20, height: 20 };
+
+            if (Utils.checkCollision(projBox, hurtbox)) {
+                // Hit!
+                const intensity = 'normal';
+
+                if (!opponent.isBlocking) {
+                    opponent.takeDamage(p.damage, p.owner, this.effectsManager);
+
+                    // Effects
+                    this.effectsManager.createHitSpark(p.x, p.y, '#FF00FF', 'normal');
+                    this.effectsManager.createImpactFlash(p.x, p.y, 40, '#FF00FF');
+
+                    // Hit freeze
+                    this.effectsManager.triggerHitFreeze(20, 'light');
+                } else {
+                    // Blocked
+                    this.effectsManager.createHitSpark(p.x, p.y, '#00d4ff', 'light');
+                }
+
+                this.projectiles.splice(i, 1);
+            }
+        }
+    }
+
+    // Render combo counters and projectiles
+    renderProjectiles(ctx, canvasWidth) {
+        // Render Combos
         if (this.p1Combo && this.p1Combo.currentCombo > 0) {
             this.p1Combo.render(ctx, 100, 150);
         }
         if (this.p2Combo && this.p2Combo.currentCombo > 0) {
             this.p2Combo.render(ctx, canvasWidth - 300, 150);
         }
+
+        // Render Projectiles
+        this.projectiles.forEach(p => {
+            ctx.save();
+            ctx.translate(p.x, p.y);
+
+            // Plasma Bolt (Pink/Purple)
+            ctx.fillStyle = "#FF00FF"; // Internal core
+            ctx.shadowColor = "#FF00FF";
+            ctx.shadowBlur = 15;
+            ctx.beginPath();
+            ctx.arc(0, 0, 8, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Outer glow
+            ctx.fillStyle = "rgba(255, 100, 255, 0.5)";
+            ctx.beginPath();
+            ctx.arc(0, 0, 15, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Trail
+            ctx.fillStyle = "rgba(255, 0, 255, 0.3)";
+            ctx.fillRect(-20 * p.direction, -5, 20 * p.direction, 10);
+
+            ctx.restore();
+        });
     }
 }
 

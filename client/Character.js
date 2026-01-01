@@ -59,6 +59,7 @@ class Character {
         };
         this.spritesLoaded = {};
         this.useSprites = false;
+        this.useCanvasRenderer = true; // Use vector Canvas drawing (Capcom 2D style)
         this.spriteBaseName = ''; // e.g., 'chief', 'elite', 'brute'
 
         // Frame configuration for each action (can be overridden per character)
@@ -196,18 +197,31 @@ class Character {
     render(ctx) {
         ctx.save();
 
-        // Flip sprite based on facing direction
-        if (this.facing === -1) {
-            ctx.translate(this.x + this.width, this.y);
-            ctx.scale(-1, 1);
-        } else {
-            ctx.translate(this.x, this.y);
+        // Flash white when hurt
+        if (this.isHurt && Math.floor(this.hurtTimer / 50) % 2 === 0) {
+            ctx.globalAlpha = 0.7;
         }
 
-        // Use sprites if loaded
-        if (this.useSprites) {
+        // Priority: Canvas Renderer > Sprites > Simple
+        if (this.useCanvasRenderer && typeof CanvasCharacterRenderer !== 'undefined') {
+            this.renderCanvas(ctx);
+        } else if (this.useSprites) {
+            // Flip sprite based on facing direction
+            if (this.facing === -1) {
+                ctx.translate(this.x + this.width, this.y);
+                ctx.scale(-1, 1);
+            } else {
+                ctx.translate(this.x, this.y);
+            }
             this.renderSprite(ctx);
         } else {
+            // Flip sprite based on facing direction
+            if (this.facing === -1) {
+                ctx.translate(this.x + this.width, this.y);
+                ctx.scale(-1, 1);
+            } else {
+                ctx.translate(this.x, this.y);
+            }
             this.renderSimple(ctx);
         }
 
@@ -217,6 +231,25 @@ class Character {
         if (CONFIG.DEBUG_MODE) {
             this.drawDebugBoxes(ctx);
         }
+    }
+
+    renderCanvas(ctx) {
+        // Get current pose and frame for canvas rendering
+        const pose = this.getSpriteAction();
+        const currentFrame = this.animationSystem.getCurrentFrame();
+
+        // Call the canvas character renderer
+        CanvasCharacterRenderer.draw(
+            ctx,
+            this.spriteBaseName,  // 'chief', 'elite', 'brute'
+            pose,                  // 'idle', 'walk', 'punch', etc.
+            currentFrame,          // animation frame index
+            this.x,
+            this.y,
+            this.width,
+            this.height,
+            this.facing
+        );
     }
 
     renderSprite(ctx) {
@@ -363,10 +396,13 @@ class Character {
             if (this.isOnGround()) {
                 this.velocityY = this.jumpForce;
                 this.isJumping = true;
-            } else if (this.canDoubleJump) {
+                this.isJumping = true;
+            }
+            /* Double jump disabled
+            else if (this.canDoubleJump) {
                 this.velocityY = this.jumpForce * 0.8;
                 this.canDoubleJump = false;
-            }
+            } */
         }
     }
 
@@ -386,6 +422,7 @@ class Character {
     performAttack(type, duration, damage) {
         if (!this.isAttacking && !this.isHurt && !this.isBlocking) {
             this.isAttacking = true;
+            this.hasFiredProjectile = false;
             this.attackTimer = duration;
             this.attackType = type;
             this.attackDamage = damage;
@@ -422,9 +459,13 @@ class Character {
             this.hurtTimer = CONFIG.HIT_STUN_DURATION;
             this.isAttacking = false;
 
-            // Knockback
-            const knockbackForce = this.facing === opponent.facing ? 8 : -8;
-            this.velocityX = knockbackForce;
+            // Knockback - Always away from attacker
+            const directionToAttacker = Math.sign(opponent.x - this.x);
+            // If attacker is to the right (1), we move left (-1). If to left (-1), we move right (1).
+            // Fallback to -this.facing if positions are identical (rare)
+            const knockbackDir = directionToAttacker !== 0 ? -directionToAttacker : -this.facing;
+
+            this.velocityX = knockbackDir * 8;
             this.velocityY = -3;
         }
 

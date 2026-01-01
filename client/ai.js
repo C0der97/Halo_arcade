@@ -65,6 +65,21 @@ class AI {
             return;
         }
 
+        // Ranged Defense - dodge projectiles if opponent is attacking from far
+        if (isOpponentAttacking && distance > 200) {
+            const reaction = Math.random();
+            if (reaction < 0.4) {
+                this.currentAction = 'jump';
+                this.actionDuration = 300;
+                return;
+            } else if (reaction < 0.7) {
+                this.currentAction = 'block';
+                this.actionDuration = 500;
+                return;
+            }
+            // 30% chance to keep moving (aggressiveness)
+        }
+
         // Movement - get closer if too far
         if (distance > 200) {
             this.currentAction = opponent.x > aiCharacter.x ? 'moveRight' : 'moveLeft';
