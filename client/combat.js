@@ -166,18 +166,33 @@ class CombatManager {
     }
 
     checkProjectileSpawn(attacker) {
+        // BRUTE KICK (Gravity Hammer Blast?)
         if (attacker.name === 'BRUTE' && attacker.isAttacking && attacker.attackType === 'kick') {
-            // Spawn on frame 1 (visual firing point)
             const currentFrame = attacker.animationSystem.currentFrame;
             if (currentFrame === 1 && !attacker.hasFiredProjectile) {
-                // Determine spawn position (gun barrel tip)
-                const spawnX = attacker.x + (attacker.facing === 1 ? 160 : -10); // Offset based on sprite width/2 + arm
-                const spawnY = attacker.y + 110; // Approx gun height
+                // Adjust Brute spawn (Gravity Hammer / Gun)
+                // User: "Lower 4px more" -> 125 + 4 = 129
+                const spawnX = attacker.x + (attacker.facing === 1 ? 170 : -20);
+                const spawnY = attacker.y + 129;
+                this.createProjectile(attacker, spawnX, spawnY, '#FF00FF', 'gravity');
+                attacker.hasFiredProjectile = true;
+                if (window.uiManager && window.uiManager.audioManager) window.uiManager.audioManager.playSFX('special');
+            }
+        }
+        // ELITE SPECIAL (Plasma Grenade/Bolt) - Mapped to KICK (H)
+        else if (attacker.name === 'ELITE' && attacker.isAttacking && attacker.attackType === 'kick') {
+            // Spawn on frame 0 or 1 (kick animation)
+            const currentFrame = attacker.animationSystem.currentFrame;
+            if ((currentFrame === 0 || currentFrame === 1) && !attacker.hasFiredProjectile) {
+                // Adjust spawn position for Elite (Hand/Rifle tip)
+                // User Feedback: "Raise it 15px" -> 200 - 15 = 185
+                const spawnX = attacker.x + (attacker.facing === 1 ? 130 : 10);
+                const spawnY = attacker.y + 185; // Raised slightly (was 200)
 
-                this.createProjectile(attacker, spawnX, spawnY);
+                // Blue Plasma
+                this.createProjectile(attacker, spawnX, spawnY, '#00FFFF', 'plasma');
                 attacker.hasFiredProjectile = true;
 
-                // Sound
                 if (window.uiManager && window.uiManager.audioManager) {
                     window.uiManager.audioManager.playSFX('special');
                 }
@@ -185,18 +200,20 @@ class CombatManager {
         }
     }
 
-    createProjectile(owner, x, y) {
+    createProjectile(owner, x, y, color = '#FF00FF', type = 'normal') {
         this.projectiles.push({
             owner: owner,
             x: x,
             y: y,
-            vx: owner.facing * 15, // Speed
-            vy: 0, // Straight shot
+            vx: owner.facing * 25, // Faster speed (was 15)
+            vy: 0,
             life: 1000,
-            damage: 8, // Plasma damage
+            damage: 15, // Increased damage (was 8)
             direction: owner.facing,
             width: 20,
-            height: 10
+            height: 20,
+            color: color,
+            type: type
         });
     }
 
@@ -255,27 +272,30 @@ class CombatManager {
         }
 
         // Render Projectiles
+        // Render Projectiles
         this.projectiles.forEach(p => {
             ctx.save();
             ctx.translate(p.x, p.y);
 
-            // Plasma Bolt (Pink/Purple)
-            ctx.fillStyle = "#FF00FF"; // Internal core
-            ctx.shadowColor = "#FF00FF";
-            ctx.shadowBlur = 15;
+            // Dynamic Color Plasma Bolt
+            const mainColor = p.color;
+
+            // Core (White hot center)
+            ctx.fillStyle = "#FFFFFF";
+            ctx.shadowColor = mainColor;
+            ctx.shadowBlur = 20;
             ctx.beginPath();
-            ctx.arc(0, 0, 8, 0, Math.PI * 2);
+            ctx.arc(0, 0, 10, 0, Math.PI * 2);
             ctx.fill();
 
-            // Outer glow
-            ctx.fillStyle = "rgba(255, 100, 255, 0.5)";
+            // Inner Glow
+            ctx.fillStyle = mainColor;
+            ctx.globalAlpha = 0.8;
             ctx.beginPath();
             ctx.arc(0, 0, 15, 0, Math.PI * 2);
             ctx.fill();
 
-            // Trail
-            ctx.fillStyle = "rgba(255, 0, 255, 0.3)";
-            ctx.fillRect(-20 * p.direction, -5, 20 * p.direction, 10);
+            // Trail / Outer Glow REMOVED completely
 
             ctx.restore();
         });

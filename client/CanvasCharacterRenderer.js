@@ -423,7 +423,7 @@ class CanvasCharacterRenderer {
             ctx.shadowColor = 'transparent';
         };
 
-        // Helper para dibujar piernas (Shortened & Stockier)
+        // Helper para dibujar piernas (Shortened & Stockier with JOINTS)
         const drawLeg = (w, isBack) => {
             let thighRot = Math.sin(w) * 0.6;
             let kneeRot = Math.abs(Math.cos(w)) * 0.8;
@@ -434,19 +434,32 @@ class CanvasCharacterRenderer {
             ctx.save();
             ctx.rotate(thighRot);
 
-            // Muslo (Upper Thigh) - Shortened
+            // HIP JOINT (Circular pivot to hide gaps) - NEW
+            ctx.beginPath();
+            ctx.arc(0, 0, 16, 0, Math.PI * 2); // Increased size to 16
+            ctx.fillStyle = C.undersuit;
+            ctx.fill();
+
+            // Muslo (Upper Thigh)
             poly([[-12, -15], [20, -20], [16, 35], [-16, 32]], C.darkMain);
             // Armor Plate (Thigh)
             poly([[-10, -5], [18, -10], [14, 28], [-12, 22]], isBack ? C.blueMain : C.blueLight);
 
-            ctx.translate(0, 30); // REDUCED LENGTH (was 40)
+            ctx.translate(0, 30);
+
+            // KNEE JOINT (Circular pivot) - NEW
+            ctx.beginPath();
+            ctx.arc(0, 0, 10, 0, Math.PI * 2);
+            ctx.fillStyle = C.undersuit;
+            ctx.fill();
+
             ctx.rotate(0.5 - kneeRot);
 
-            // Pantorrilla (Shin Guard) - Shortened
+            // Pantorrilla (Shin Guard)
             poly([[-11, -8], [13, -8], [10, 45], [-14, 50]], C.darkMain);
             poly([[-9, 2], [11, 2], [7, 38], [-11, 42]], isBack ? C.blueMain : C.blueLight);
 
-            ctx.translate(0, 45); // REDUCED LENGTH (was 55)
+            ctx.translate(0, 45);
             ctx.rotate(-0.5 + footRot * 0.5);
 
             // Pie
@@ -552,12 +565,18 @@ class CanvasCharacterRenderer {
         // 2. PELVIS & ABDOMEN (LOWER BODY)
         // Draw this BEFORE the torso so the legs connect here
         ctx.save();
-        ctx.translate(0, 5); // LOWERED PELVIS (was -15)
+        ctx.translate(0, -5); // RAISED PELVIS (was 10)
 
-        // Pelvis - Large enough to cover leg joints
-        poly([[-18, 5], [18, 0], [15, 30], [-15, 35]], C.undersuit);
-        // Pelvis Armor
-        poly([[-16, 0], [16, -5], [12, 10], [-12, 12]], C.darkMain);
+        // Waist/Stomach Connection (Tapered "V" shape)
+        // Narrower at top to fit into chest, wider at bottom to fit hips
+        poly([[-12, -15], [12, -20], [16, 15], [-16, 18]], C.undersuit);
+
+        // Pelvis - Groin area (Tapered downwards)
+        // Changed color to WHITE (blueMain) as requested
+        poly([[-18, 5], [18, 0], [8, 40], [-8, 45]], C.blueMain);
+
+        // Pelvis Armor (Dark detail on top of white pelvis)
+        poly([[-18, 0], [18, -5], [14, 15], [-14, 18]], C.darkMain);
 
         ctx.restore();
 
@@ -566,8 +585,9 @@ class CanvasCharacterRenderer {
         ctx.translate(0, -45); // MOVED UP SIGNIFICANTLY (was -25)
         ctx.rotate(bodyTilt + breathe);
 
-        // Abdomen (Long connection)
-        poly([[-15, 45], [15, 40], [12, 80], [-12, 85]], C.undersuit);
+        // Abdomen (Tapered to connect with waist)
+        // Matches the V-shape of the waist connection
+        poly([[-12, 45], [12, 40], [10, 75], [-10, 80]], C.undersuit);
 
         // Chest Main (Broad Shoulders)
         poly([[-32, -30], [27, -20], [22, 25], [-27, 35]], C.darkMain); // Slightly broader
@@ -609,11 +629,11 @@ class CanvasCharacterRenderer {
             ctx.rotate(0.2 + bodyTilt);
             ctx.translate(-5, 5);
 
-            // Hombro
-            poly([[-16, -16], [16, -16], [12, 12], [-12, 12]], C.darkMain);
+            // Hombro (Shoulder) - WHITE during block
+            poly([[-16, -16], [16, -16], [12, 12], [-12, 12]], C.blueMain);
             poly([[-14, -14], [14, -14], [10, 10], [-10, 10]], C.blueLight);
 
-            // Brazo... 
+            // Brazo...
             ctx.translate(0, 15);
             ctx.rotate(-1.5);
 
@@ -621,12 +641,16 @@ class CanvasCharacterRenderer {
             ctx.rotate(1.5); // Reset
             ctx.rotate(-0.5); // Brazo levantado diagonal
 
-            poly([[-10, 0], [10, 0], [8, 40], [-8, 40]], C.darkMain);
+            // Arm (Bicep) with Armor
+            poly([[-10, 0], [10, 0], [8, 40], [-8, 40]], C.darkMain); // Undersuit
+            poly([[-8, 5], [8, 5], [6, 35], [-6, 35]], C.blueMain);   // White Armor Plate
+
             ctx.translate(0, 45);
 
-            // Antebrazo horizontal cubriendo
+            // Antebrazo horizontal cubriendo (Forearm/Elbow) - WHITE
             ctx.rotate(-1.8);
-            poly([[-8, 0], [12, -2], [15, 40], [-10, 40]], C.joints);
+            poly([[-8, 0], [12, -2], [15, 40], [-10, 40]], C.blueMain); // Changed to White Armor
+            poly([[-5, 5], [8, 4], [10, 35], [-7, 35]], C.blueLight);   // Highlight
 
             // Espada vertical/diagonal bloqueando
             ctx.translate(5, 40);
@@ -653,8 +677,31 @@ class CanvasCharacterRenderer {
             ctx.translate(0, 50);
             drawEnergySword();
 
+        } else if (pose === 'punch') {
+            // MELEE / PUNCH (Rifle Butt)
+            // Swing arm forward
+            let swing = Math.sin(frame * 0.5) * 1.5; // Large swing
+            ctx.rotate(0.5 - swing + bodyTilt);
+            ctx.translate(swing * 20, swing * 10);
+
+            // Hombro
+            poly([[-16, -16], [16, -16], [12, 12], [-12, 12]], C.darkMain);
+            poly([[-14, -14], [14, -14], [10, 10], [-10, 10]], C.blueLight);
+
+            // Brazo arriba
+            ctx.translate(0, 15);
+            poly([[-10, 0], [10, 0], [8, 40], [-8, 40]], C.darkMain);
+            poly([[-5, 5], [5, 5], [4, 35], [-4, 35]], C.blueMain);
+
+            // Antebrazo y Rifle
+            ctx.translate(0, 40);
+            ctx.rotate(-1.5); // Point forward
+
+            // Rifle visual
+            drawPlasmaRifle();
+
         } else if (isAttacking) {
-            // Disparo con rifle
+            // Disparo con rifle (Standard Attack/Pose default)
             let recoil = Math.sin(frame * 0.5) * 0.4;
             ctx.rotate(-0.1 - recoil + bodyTilt);
             ctx.translate(recoil * -15, 0);
