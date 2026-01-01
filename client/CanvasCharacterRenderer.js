@@ -423,9 +423,8 @@ class CanvasCharacterRenderer {
             ctx.shadowColor = 'transparent';
         };
 
-        // Helper para dibujar piernas (Cinemática mejorada tipo Spartan pero Digitígrada)
+        // Helper para dibujar piernas (Shortened & Stockier)
         const drawLeg = (w, isBack) => {
-            // Spartan Logic adapted:
             let thighRot = Math.sin(w) * 0.6;
             let kneeRot = Math.abs(Math.cos(w)) * 0.8;
             let footRot = Math.sin(w + Math.PI / 2) * 0.3;
@@ -435,27 +434,24 @@ class CanvasCharacterRenderer {
             ctx.save();
             ctx.rotate(thighRot);
 
-            // Muslo (Upper Thigh) - EXTENDED UPWARDS to prevent gap
-            // Critical fix: The top points are much higher (-15, -20) to go inside the pelvis
-            poly([[-12, -20], [20, -25], [16, 45], [-16, 40]], C.darkMain);
+            // Muslo (Upper Thigh) - Shortened
+            poly([[-12, -15], [20, -20], [16, 35], [-16, 32]], C.darkMain);
             // Armor Plate (Thigh)
-            poly([[-10, -10], [18, -15], [14, 35], [-12, 30]], isBack ? C.blueMain : C.blueLight);
+            poly([[-10, -5], [18, -10], [14, 28], [-12, 22]], isBack ? C.blueMain : C.blueLight);
 
-            ctx.translate(0, 40);
-            ctx.rotate(0.5 - kneeRot); // Rodilla inversa
+            ctx.translate(0, 30); // REDUCED LENGTH (was 40)
+            ctx.rotate(0.5 - kneeRot);
 
-            // Pantorrilla (Shin Guard)
-            // Extended top and bottom for overlap
-            poly([[-11, -8], [13, -8], [10, 55], [-14, 60]], C.darkMain);
-            poly([[-9, 2], [11, 2], [7, 45], [-11, 50]], isBack ? C.blueMain : C.blueLight); // Shin Plate
+            // Pantorrilla (Shin Guard) - Shortened
+            poly([[-11, -8], [13, -8], [10, 45], [-14, 50]], C.darkMain);
+            poly([[-9, 2], [11, 2], [7, 38], [-11, 42]], isBack ? C.blueMain : C.blueLight);
 
-            ctx.translate(0, 55);
-            ctx.rotate(-0.5 + footRot * 0.5); // Pie
+            ctx.translate(0, 45); // REDUCED LENGTH (was 55)
+            ctx.rotate(-0.5 + footRot * 0.5);
 
-            // Pie / Pezuña
-            // Extended top for overlap
+            // Pie
             poly([[-12, -8], [18, -4], [25, 13], [-10, 13]], C.darkLight);
-            poly([[-10, 0], [20, 5], [24, 12], [-8, 12]], isBack ? C.blueMain : C.blueLight); // Armor detail
+            poly([[-10, 0], [20, 5], [24, 12], [-8, 12]], isBack ? C.blueMain : C.blueLight);
 
             ctx.restore();
         };
@@ -556,7 +552,7 @@ class CanvasCharacterRenderer {
         // 2. PELVIS & ABDOMEN (LOWER BODY)
         // Draw this BEFORE the torso so the legs connect here
         ctx.save();
-        ctx.translate(0, -15); // Center of pelvis
+        ctx.translate(0, 5); // LOWERED PELVIS (was -15)
 
         // Pelvis - Large enough to cover leg joints
         poly([[-18, 5], [18, 0], [15, 30], [-15, 35]], C.undersuit);
@@ -567,17 +563,17 @@ class CanvasCharacterRenderer {
 
         // 3. TORSO SUPERIOR (CHEST & HEAD)
         ctx.save();
-        ctx.translate(0, -25); // Move up from pelvis
+        ctx.translate(0, -45); // MOVED UP SIGNIFICANTLY (was -25)
         ctx.rotate(bodyTilt + breathe);
 
-        // Abdomen (connecting pelvis to chest)
-        poly([[-16, 20], [16, 15], [12, 45], [-12, 50]], C.undersuit);
+        // Abdomen (Long connection)
+        poly([[-15, 45], [15, 40], [12, 80], [-12, 85]], C.undersuit);
 
         // Chest Main (Broad Shoulders)
-        poly([[-30, -30], [25, -20], [20, 25], [-25, 35]], C.darkMain);
+        poly([[-32, -30], [27, -20], [22, 25], [-27, 35]], C.darkMain); // Slightly broader
         // Chest Armor
-        poly([[-28, -28], [23, -18], [15, 20], [-23, 28]], C.blueMain);
-        poly([[-18, -18], [15, -12], [10, 10], [-15, 15]], C.blueLight);
+        poly([[-30, -28], [25, -18], [15, 20], [-25, 28]], C.blueMain);
+        poly([[-20, -18], [15, -12], [10, 10], [-15, 15]], C.blueLight);
 
         // CABEZA
         ctx.save();
