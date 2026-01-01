@@ -360,18 +360,18 @@ class CanvasCharacterRenderer {
     // ELITE (SANGHEILI) - REFACTORED FOR HALO ACCURACY
     // =====================================================
     static drawElite(ctx, pose, frame) {
-        // Colores del Elite (Refined Covenant Palette - Lighter)
+        // Colores del Elite (Ultra Style - White/Silver Palette)
         const C = {
-            blueMain: '#3a5aa0',   // Lighter Cobalt for visibility
-            blueLight: '#5d7bc0',  // Lighter Highlight
-            darkMain: '#1a1a2e',
-            darkLight: '#303045',
-            undersuit: '#121212',
-            joints: '#080808',
-            eyes: '#ffaa00',
-            plasmaGlow: '#00ffff',
+            blueMain: '#e0e0e0',   // Main Armor: Silver/White
+            blueLight: '#ffffff',  // Highlights: Pure White
+            darkMain: '#2c3e50',   // Secondary Armor: Dark Blue-Grey
+            darkLight: '#95a5a6',  // Details: Silver
+            undersuit: '#1a1a1a',  // Undersuit: Dark Grey/Black
+            joints: '#0f0f0f',     // Joints: Almost Black
+            eyes: '#ffcc00',       // Eyes: Amber/Gold
+            plasmaGlow: '#00ffff', // Lights: Cyan
             plasmaCore: '#e0ffff',
-            silver: '#8899a6'
+            silver: '#bdc3c7'
         };
 
         // Estados de animación
@@ -534,7 +534,7 @@ class CanvasCharacterRenderer {
         // Escalar y Posicionar
         ctx.save();
         ctx.scale(0.42, 0.42); // Slightly larger
-        ctx.translate(0, 25);
+        ctx.translate(0, -5); // Moved up further (was 10, then 25)
 
         let w = walkCycle;
         let bob = Math.abs(Math.sin(w)) * 5;
