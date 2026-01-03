@@ -1040,3 +1040,50 @@ body {
     max-width: 500px;
     margin: 0 auto;
 }
+/* Gamepad Navigation Focus */
+.gamepad-focused {
+    border-color: #ffd700 !important;
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.6), inset 0 0 20px rgba(255, 215, 0, 0.2) !important;
+    transform: scale(1.05) !important;
+    z-index: 100;
+}
+
+.menu-btn.gamepad-focused::before {
+    left: 100%;
+}
+
+.character-icon.gamepad-focused .icon-bg {
+    border-color: #ffd700;
+    box-shadow: 0 0 40px rgba(255, 215, 0, 0.8) !important;
+}
+
+/* Dynamic Controls Display */
+#keyboard-controls,
+#gamepad-controls {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+#gamepad-controls {
+    display: none; /* Hidden by default until gamepad connected */
+}
+
+.gamepad-section {
+    width: 100%;
+    max-width: 600px;
+    background: linear-gradient(135deg, rgba(20, 20, 30, 0.95), rgba(10, 10, 20, 0.98));
+    border-color: var(--unsc-cyan);
+}
+
+.gamepad-note {
+    margin-top: 25px;
+    text-align: center;
+    color: #ffd700;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.9rem;
+    padding: 10px;
+    background: rgba(255, 215, 0, 0.1);
+    border-radius: 5px;
+    border: 1px solid rgba(255, 215, 0, 0.3);
+}

@@ -12,6 +12,9 @@ class InputManager {
         this.gamepadButtonsPressed = {}; // Track previous frame button state
         this.deadzone = 0.25; // Analog stick deadzone
 
+        // Game mode tracking (to prevent AI from reading gamepad)
+        this.gameMode = 'vsPlayer'; // 'vsPlayer', 'vsCPU', or 'online'
+
         // Keyboard controls
         this.player1Controls = {
             left: 'a',
@@ -118,6 +121,42 @@ class InputManager {
                 this.gamepads[i] = gamepads[i];
             }
         }
+
+        // Ghost Controller Detection (Linux DualSense duplicate fix)
+        // If Gamepad 0 and Gamepad 1 have identical state, ignore Gamepad 1
+        if (this.gamepads[0] && this.gamepads[1]) {
+            if (this.areGamepadsIdentical(this.gamepads[0], this.gamepads[1])) {
+                this.ghostGamepadIndex = 1;
+                // console.log('Ghost gamepad detected at index 1');
+            } else {
+                this.ghostGamepadIndex = -1;
+            }
+        }
+    }
+
+    areGamepadsIdentical(gp1, gp2) {
+        // Check if buttons are identical
+        if (gp1.buttons.length !== gp2.buttons.length) return false;
+
+        // Check a few key buttons for identical values
+        // We check specific buttons because some floating point axes might differ slightly
+        for (let i = 0; i < 4; i++) { // Check face buttons
+            if (gp1.buttons[i].pressed !== gp2.buttons[i].pressed) return false;
+            if (gp1.buttons[i].value !== gp2.buttons[i].value) return false;
+        }
+
+        // If buttons are pressed, acts as strong signal
+        // If NO buttons are pressed, assume identical if axes match
+        const gp1Pressed = gp1.buttons.some(b => b.pressed);
+        const gp2Pressed = gp2.buttons.some(b => b.pressed);
+
+        if (gp1Pressed !== gp2Pressed) return false;
+
+        // If buttons pressed match, check axes
+        if (Math.abs(gp1.axes[0] - gp2.axes[0]) > 0.1) return false;
+        if (Math.abs(gp1.axes[1] - gp2.axes[1]) > 0.1) return false;
+
+        return true;
     }
 
     showGamepadNotification(message, connected) {
@@ -145,9 +184,25 @@ class InputManager {
         return false;
     }
 
+    // Set game mode (used to prevent AI from reading gamepad)
+    setGameMode(mode) {
+        this.gameMode = mode;
+    }
+
     getGamepadInput(playerNum) {
+        // In CPU mode, player 2 should NOT read gamepad input (AI controls it)
+        if (this.gameMode === 'vsCPU' && playerNum === 2) {
+            return null;
+        }
+
         // Player 1 uses gamepad 0, Player 2 uses gamepad 1
         const gamepadIndex = playerNum - 1;
+
+        // Ignore ghost gamepad
+        if (gamepadIndex === this.ghostGamepadIndex) {
+            return null;
+        }
+
         const gamepad = this.gamepads[gamepadIndex];
 
         if (!gamepad) return null;
@@ -212,11 +267,20 @@ class InputManager {
     }
 
     handleCharacterInput(character, playerNum) {
+        if (playerNum === 2) {
+            // Debug log to see if this is ever called for P2
+            // console.log('[Input] Handling input for Player 2'); 
+        }
+
         // Update gamepad state
         this.updateGamepads();
 
         const controls = playerNum === 1 ? this.player1Controls : this.player2Controls;
         const gamepadInput = this.getGamepadInput(playerNum);
+
+        if (playerNum === 2 && (gamepadInput)) {
+            console.log('[Input] Player 2 has direct gamepad input!', gamepadInput);
+        }
 
         // Reset moving state
         character.stopMoving();

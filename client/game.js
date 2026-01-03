@@ -98,8 +98,13 @@ class Game {
     }
 
     initFight(char1Type, char2Type, gameMode = 'vsPlayer', aiDifficulty = 'easy') {
+        console.log(`[Game] initFight STARTED. Mode: ${gameMode}, Difficulty: ${aiDifficulty}`);
+
         // Set game mode
         this.gameMode = gameMode;
+
+        // Configure input manager with game mode (prevents AI from reading gamepad)
+        this.inputManager.setGameMode(gameMode);
 
         // Create characters based on selection
         this.player1 = this.createCharacter(char1Type, 200, CONFIG.GROUND_Y, 1, 1);
@@ -217,16 +222,33 @@ class Game {
             return;
         }
 
+        // DEBUG LOGGING
+        if (!this.debugFrameCount) this.debugFrameCount = 0;
+        this.debugFrameCount++;
+
+        if (this.debugFrameCount % 60 === 0) {
+            console.log(`[GameLoop] Mode: ${this.gameMode}, P2 AI: ${!!this.aiOpponent}, Online: ${this.isOnlineMode}`);
+        }
+
         // LOCAL MODE (VS Player or VS CPU)
         // Handle player 1 input
         this.inputManager.handleCharacterInput(this.player1, 1);
 
         // Handle player 2 input OR AI
-        if (this.gameMode === 'vsCPU' && this.aiOpponent) {
-            // AI controls player 2
-            this.aiOpponent.update(this.player2, this.player1, deltaTime);
+        if (this.gameMode === 'vsCPU') {
+            if (this.debugFrameCount % 60 === 0) console.log('[GameLoop] Executing processing for AI Opponent');
+
+            // Strictly AI controlled
+            if (this.aiOpponent) {
+                this.aiOpponent.update(this.player2, this.player1, deltaTime);
+            } else {
+                console.warn('AI Opponent missing in CPU mode, recreating...');
+                this.aiOpponent = new AI('medium');
+            }
         } else {
-            // Human controls player 2
+            if (this.debugFrameCount % 60 === 0) console.log('[GameLoop] Executing Human Input for Player 2');
+
+            // Human controls player 2 ONLY if NOT in CPU mode
             this.inputManager.handleCharacterInput(this.player2, 2);
         }
 
@@ -509,6 +531,14 @@ class Game {
     render() {
         // Clear canvas first to prevent visual artifacts
         this.ctx.clearRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+
+        // DEBUG: Uncomment to see Game State
+        this.ctx.save();
+        this.ctx.fillStyle = 'white';
+        this.ctx.font = '16px monospace';
+        this.ctx.fillText(`MODE: ${this.gameMode}`, 10, 20);
+        this.ctx.fillText(`AI: ${this.aiOpponent ? 'ACTIVE' : 'NULL'}`, 10, 40);
+        this.ctx.restore();
 
         // Draw background wallpaper (video or image) or fallback gradient
         if (this.backgroundReady && this.backgroundImage) {
