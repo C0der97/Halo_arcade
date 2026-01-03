@@ -54,69 +54,53 @@
         <div class="character-select-wrapper">
             <h2 class="select-title">SELECCIONA TU GUERRERO</h2>
 
-            <div class="character-select-container">
-                <!-- Player 1 Info -->
-                <div class="player-info" id="p1-info">
-                    <div class="player-label">JUGADOR 1</div>
-                    <div class="character-preview" id="p1-preview">
-                        <div class="preview-placeholder">?</div>
+            <!-- Character Grid -->
+            <div class="character-grid-arcade">
+                <div class="character-icon" data-character="chief">
+                    <div class="icon-bg chief-bg">
+                        <img src="assets/images/master.png" alt="Master Chief" class="character-portrait">
                     </div>
-                    <div class="character-name" id="p1-char-name">---</div>
-                    <div class="character-stats-mini" id="p1-stats">
-                        <div class="stat-mini">
-                            <span>VEL</span>
-                            <div class="stat-dots" id="p1-speed"></div>
-                        </div>
-                        <div class="stat-mini">
-                            <span>FUE</span>
-                            <div class="stat-dots" id="p1-power"></div>
-                        </div>
-                        <div class="stat-mini">
-                            <span>DEF</span>
-                            <div class="stat-dots" id="p1-defense"></div>
-                        </div>
+                    <div class="char-name-label">MASTER CHIEF</div>
+                </div>
+                <div class="character-icon" data-character="elite">
+                    <div class="icon-bg elite-bg">
+                        <img src="assets/images/elite.png" alt="Elite" class="character-portrait">
+                    </div>
+                    <div class="char-name-label">ELITE</div>
+                </div>
+                <div class="character-icon" data-character="brute">
+                    <div class="icon-bg brute-bg">
+                        <img src="assets/images/brute.png" alt="Brute" class="character-portrait">
+                    </div>
+                    <div class="char-name-label">BRUTE</div>
+                </div>
+                <div class="character-icon" data-character="hunter">
+                    <div class="icon-bg hunter-bg">
+                        <img src="assets/images/hunter.png" alt="Hunter" class="character-portrait">
+                    </div>
+                    <div class="char-name-label">HUNTER</div>
+                </div>
+            </div>
+
+            <!-- Selected Characters Info (appears when characters are selected) -->
+            <div class="selected-info-container" id="selected-info">
+                <div class="player-selection" id="p1-selection">
+                    <span class="player-tag p1">P1</span>
+                    <span class="selected-char-name" id="p1-char-name">---</span>
+                    <div class="mini-stats" id="p1-stats">
+                        <span class="stat"><b>VEL</b> <span id="p1-speed">-</span></span>
+                        <span class="stat"><b>FUE</b> <span id="p1-power">-</span></span>
+                        <span class="stat"><b>DEF</b> <span id="p1-defense">-</span></span>
                     </div>
                 </div>
-
-                <!-- Character Grid -->
-                <div class="character-grid-arcade">
-                    <div class="character-icon" data-character="chief">
-                        <div class="icon-bg chief-bg">
-                            <img src="assets/images/master.png" alt="Master Chief" class="character-portrait">
-                        </div>
-                    </div>
-                    <div class="character-icon" data-character="elite">
-                        <div class="icon-bg elite-bg">
-                            <img src="assets/images/elite.png" alt="Elite" class="character-portrait">
-                        </div>
-                    </div>
-                    <div class="character-icon" data-character="brute">
-                        <div class="icon-bg brute-bg">
-                            <img src="assets/images/brute.png" alt="Brute" class="character-portrait">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Player 2 Info -->
-                <div class="player-info" id="p2-info">
-                    <div class="player-label">JUGADOR 2</div>
-                    <div class="character-preview" id="p2-preview">
-                        <div class="preview-placeholder">?</div>
-                    </div>
-                    <div class="character-name" id="p2-char-name">---</div>
-                    <div class="character-stats-mini" id="p2-stats">
-                        <div class="stat-mini">
-                            <span>VEL</span>
-                            <div class="stat-dots" id="p2-speed"></div>
-                        </div>
-                        <div class="stat-mini">
-                            <span>FUE</span>
-                            <div class="stat-dots" id="p2-power"></div>
-                        </div>
-                        <div class="stat-mini">
-                            <span>DEF</span>
-                            <div class="stat-dots" id="p2-defense"></div>
-                        </div>
+                <div class="vs-divider">VS</div>
+                <div class="player-selection" id="p2-selection">
+                    <span class="player-tag p2">P2</span>
+                    <span class="selected-char-name" id="p2-char-name">---</span>
+                    <div class="mini-stats" id="p2-stats">
+                        <span class="stat"><b>VEL</b> <span id="p2-speed">-</span></span>
+                        <span class="stat"><b>FUE</b> <span id="p2-power">-</span></span>
+                        <span class="stat"><b>DEF</b> <span id="p2-defense">-</span></span>
                     </div>
                 </div>
             </div>
@@ -237,6 +221,7 @@
     <script src="characters/masterchief.js"></script>
     <script src="characters/elite.js"></script>
     <script src="characters/brute.js"></script>
+    <script src="characters/hunter.js"></script>
     <script src="input.js"></script>
     <script src="combat.js?v=16"></script>
     <script src="audio.js?v=2"></script>

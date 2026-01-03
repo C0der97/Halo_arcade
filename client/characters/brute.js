@@ -46,9 +46,14 @@ class Brute extends Character {
         this.performAttack('punch', 350, 12); // Higher damage than base
     }
 
-    // Override kick - even more damage
+    // Override kick - Brute Shot (shoots projectile)
     kick() {
         this.performAttack('kick', 450, 16);
+
+        // Play Brute Shot sound
+        const bruteShot = new Audio('assets/sounds/brute_shot.wav');
+        bruteShot.volume = 0.7;
+        bruteShot.play().catch(() => { });
     }
 
     // Override special - Gravity Hammer Smash

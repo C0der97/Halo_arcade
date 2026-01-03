@@ -19,6 +19,16 @@ class CanvasCharacterRenderer {
             black: '#1a1a0a', dark: '#3a2a1a', base: '#5c3a1a', light: '#7a4a2a',
             fur: '#4a3a2a', furDark: '#3a2a1a',
             red: '#ff4444', armor: '#6a4a3a'
+        },
+        hunter: {
+            armorDark: '#2d0a0a',    // Rojo muy oscuro (antes gris)
+            armorRed: '#8a1c1c',     // Rojo Banished principal
+            armorHigh: '#c53030',    // Rojo claro para highlights
+            metal: '#3d1515',        // Metal con tono rojo oscuro
+            neonOrange: '#ff6600',   // Luz naranja principal
+            neonYellow: '#ffcc00',   // Núcleo de luz (ojo)
+            beamCore: '#ffffff',     // Centro del disparo
+            beamGlow: '#00ff66'      // Verde radiactivo (Fuel Rod)
         }
     };
 
@@ -43,6 +53,9 @@ class CanvasCharacterRenderer {
                 break;
             case 'brute':
                 this.drawBrute(ctx, pose, frame);
+                break;
+            case 'hunter':
+                this.drawHunter(ctx, pose, frame);
                 break;
         }
 
@@ -542,8 +555,8 @@ class CanvasCharacterRenderer {
 
         // Escalar y Posicionar
         ctx.save();
-        ctx.scale(0.42, 0.42); // Slightly larger
-        ctx.translate(0, -5); // Moved up further (was 10, then 25)
+        ctx.scale(0.42, 0.42);
+        ctx.translate(0, 15); // Bajado más para mejor posición
 
         let w = walkCycle;
         let bob = Math.abs(Math.sin(w)) * 5;
@@ -1181,6 +1194,370 @@ class CanvasCharacterRenderer {
         }
         ctx.restore();
         ctx.restore();  // Para el scale
+    }
+
+    // =====================================================
+    // HUNTER (MGALEKGOLO) - Banished Mecha Style
+    // =====================================================
+    static drawHunter(ctx, pose, frame) {
+        const C = this.COLORS.hunter;
+
+        // Estados de animación
+        let walkCycle = 0;
+        let isAttacking = false;
+        let isJumping = false;
+        let isHurt = false;
+        let isBlocking = false;
+        let isPunching = false;   // Shield Bash
+        let isKicking = false;    // Heavy Stomp
+        let isBeamFiring = false; // Fuel Rod Cannon
+
+        switch (pose) {
+            case 'walk':
+                walkCycle = Date.now() * 0.003;
+                break;
+            case 'punch':
+                isAttacking = true;
+                isPunching = true;
+                break;
+            case 'kick':
+                isAttacking = true;
+                isKicking = true;
+                break;
+            case 'special':
+                isAttacking = true;
+                isBeamFiring = true;
+                break;
+            case 'jump':
+                isJumping = true;
+                break;
+            case 'hurt':
+                isHurt = true;
+                break;
+            case 'block':
+                isBlocking = true;
+                break;
+            default:
+                walkCycle = Date.now() * 0.001;
+        }
+
+        // Helper para dibujar polígonos con glow opcional
+        const poly = (points, color, glow = false, glowColor = null) => {
+            ctx.fillStyle = color;
+            if (glow) {
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = glowColor || color;
+            }
+            ctx.beginPath();
+            ctx.moveTo(points[0][0], points[0][1]);
+            for (let i = 1; i < points.length; i++) ctx.lineTo(points[i][0], points[i][1]);
+            ctx.closePath();
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            if (!glow) {
+                ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
+        };
+
+        // Escalar y posicionar
+        ctx.save();
+        ctx.scale(0.45, 0.45);
+        ctx.translate(0, 10);
+
+        let w = walkCycle;
+
+        // Solo aplicar animación de movimiento cuando camina (no en idle)
+        let isWalking = pose === 'walk';
+        let bob = isWalking ? Math.abs(Math.cos(w)) * 4 : 0;
+        ctx.translate(0, bob);
+
+        // Variable de pulso para LEDs (siempre activo)
+        let pulse = Math.sin(Date.now() * 0.005) * 0.5 + 0.5;
+
+        // Movimiento de piernas solo al caminar
+        let leg1 = isWalking ? Math.sin(w) * 0.3 : 0;
+        let leg2 = isWalking ? Math.sin(w + Math.PI) * 0.3 : 0;
+        let breathe = isWalking ? Math.sin(w * 0.5) * 0.05 : 0;
+
+
+        // Attack animation progress
+        let attackProgress = (frame % 10) / 10;
+
+        if (isHurt) {
+            ctx.rotate(-0.1);
+        }
+
+        // ==========================================
+        // 1. PIERNA TRASERA
+        // ==========================================
+        ctx.save();
+        ctx.translate(-20, 10);
+
+        // Heavy Stomp: pierna trasera se levanta
+        if (isKicking) {
+            ctx.rotate(-0.4);
+        } else {
+            ctx.rotate(leg2);  // leg2 ya es 0 cuando no camina
+        }
+
+        poly([[-15, -10], [15, -5], [10, 30], [-20, 25]], C.metal);
+        ctx.translate(0, 25);
+
+        // Rotación de la parte inferior de la pierna - solo cuando camina
+        let lowerLegRotation = isWalking ? (-0.3 + Math.abs(Math.sin(w + Math.PI)) * 0.2) : -0.2;
+        ctx.rotate(lowerLegRotation);
+
+        poly([[-15, 0], [12, 0], [15, 35], [-10, 35]], C.armorDark);
+        poly([[-5, 10], [5, 10], [5, 15], [-5, 15]], C.neonOrange, true);
+        poly([[-15, 35], [20, 35], [25, 45], [-15, 45]], '#0d1114');
+        ctx.restore();
+
+        // ==========================================
+        // 2. BRAZO DERECHO (CAÑÓN FUEL ROD)
+        // ==========================================
+        ctx.save();
+        ctx.translate(30, -10);
+
+        let recoilX = 0;
+        if (isBeamFiring) {
+            recoilX = (Math.random() * -5) - 3;
+        }
+        ctx.translate(recoilX, 0);
+
+        // CANNON MELEE (Kick) - El cañón hace un swing hacia adelante
+        if (isKicking) {
+            let swingProgress = Math.sin(attackProgress * Math.PI);
+            ctx.rotate(-0.5 + swingProgress * 1.2); // Swing hacia adelante
+            ctx.translate(swingProgress * 30, 0);
+
+            // Efecto de impacto del cañón
+            if (attackProgress > 0.4 && attackProgress < 0.7) {
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 4;
+                ctx.shadowColor = C.neonOrange;
+                ctx.shadowBlur = 20;
+                ctx.beginPath();
+                ctx.arc(70, 10, 25 + swingProgress * 20, -Math.PI / 3, Math.PI / 3);
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        // Hombro
+        poly([[-15, -15], [15, -15], [18, 15], [-12, 18]], C.armorRed);
+
+        // Cañón base apuntando hacia adelante
+        poly([[0, 5], [50, 0], [55, 20], [5, 25]], C.armorDark);
+        poly([[5, 8], [45, 4], [48, 18], [8, 22]], C.armorRed);
+
+        // Cables brillantes del cañón (brilla más durante golpe)
+        ctx.fillStyle = C.beamGlow;
+        ctx.shadowColor = C.beamGlow;
+        ctx.shadowBlur = (isBeamFiring || isKicking) ? 30 : 10;
+        ctx.fillRect(10, 20, 35, 3);
+        ctx.shadowBlur = 0;
+        ctx.restore();
+
+        // FUEL ROD CANNON BEAM - DIBUJADO SEPARADO PARA IR HORIZONTAL
+        if (isBeamFiring) {
+            ctx.save();
+
+            // Posición del cañón relativa al personaje
+            let beamStartX = 70;  // Desde el frente del cañón
+            let beamStartY = -5;  // Altura del cañón
+
+            // Esfera de carga en la boca del cañón
+            ctx.beginPath();
+            ctx.arc(beamStartX, beamStartY, 12 + Math.random() * 6, 0, Math.PI * 2);
+            ctx.fillStyle = C.beamGlow;
+            ctx.shadowColor = C.beamGlow;
+            ctx.shadowBlur = 35;
+            ctx.fill();
+
+            // RAYO HORIZONTAL - Va directo hacia el frente (eje X positivo)
+            // Núcleo blanco
+            ctx.fillStyle = '#fff';
+            ctx.shadowBlur = 0;
+            ctx.beginPath();
+            ctx.moveTo(beamStartX, beamStartY - 8);
+            ctx.lineTo(beamStartX + 500, beamStartY - 6);  // Rayo largo hacia la derecha
+            ctx.lineTo(beamStartX + 500, beamStartY + 6);
+            ctx.lineTo(beamStartX, beamStartY + 8);
+            ctx.fill();
+
+            // Resplandor verde exterior
+            ctx.shadowColor = C.beamGlow;
+            ctx.shadowBlur = 25 + Math.random() * 15;
+            ctx.fillStyle = C.beamGlow;
+            ctx.globalAlpha = 0.6;
+            ctx.beginPath();
+            ctx.moveTo(beamStartX - 5, beamStartY - 15);
+            ctx.lineTo(beamStartX + 500, beamStartY - 12);
+            ctx.lineTo(beamStartX + 500, beamStartY + 12);
+            ctx.lineTo(beamStartX - 5, beamStartY + 15);
+            ctx.fill();
+            ctx.globalAlpha = 1.0;
+            ctx.shadowBlur = 0;
+
+            // Partículas de energía a lo largo del rayo
+            for (let i = 0; i < 10; i++) {
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(
+                    beamStartX + 30 + Math.random() * 400,
+                    beamStartY + (Math.random() - 0.5) * 16,
+                    2 + Math.random() * 3,
+                    0, Math.PI * 2
+                );
+                ctx.fill();
+            }
+
+            ctx.restore();
+        }
+
+        // ==========================================
+        // 3. TORSO
+        // ==========================================
+        ctx.save();
+
+        // Inclinación según ataque
+        if (isPunching) {
+            ctx.rotate(0.4 + breathe); // Inclinarse hacia adelante para Shield Bash
+            ctx.translate(15, -15);
+        } else if (isKicking) {
+            ctx.rotate(0.1 + breathe); // Menos inclinación para stomp
+            ctx.translate(0, -10);
+        } else {
+            ctx.rotate(0.25 + breathe);
+            ctx.translate(0, -15);
+        }
+
+        // Abdomen (colonia de gusanos Lekgolo - brilla más durante ataques)
+        ctx.globalAlpha = isAttacking ? 1.0 : 0.8 + (pulse * 0.2);
+        poly([[-20, 0], [20, 0], [15, 30], [-25, 30]], C.neonOrange, true);
+        ctx.globalAlpha = 1.0;
+
+        // Pecho armadura
+        poly([[-35, -40], [35, -30], [40, 10], [20, 25], [-20, 25], [-40, -10]], C.armorDark);
+        poly([[-25, -30], [25, -20], [28, 5], [-28, 5]], C.armorRed);
+
+        // Cabeza integrada
+        ctx.save();
+        ctx.translate(15, -35);
+
+        // Cabeza se inclina hacia el ataque
+        if (isPunching) ctx.rotate(0.2);
+
+        poly([[-20, 0], [-5, -20], [5, -15], [0, 5]], C.armorRed);
+        poly([[-10, 0], [15, 5], [10, 15], [-12, 12]], C.armorDark);
+
+        // Ojo brillante (más intenso durante ataque)
+        ctx.fillStyle = C.neonYellow;
+        ctx.shadowColor = isAttacking ? '#ff0000' : C.neonOrange;
+        ctx.shadowBlur = isAttacking ? 20 : 10;
+        ctx.beginPath();
+        ctx.moveTo(0, 5);
+        ctx.lineTo(12, 8);
+        ctx.lineTo(2, 12);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.restore();
+
+        // Púas espalda
+        poly([[-25, -40], [-35, -70], [-15, -45]], C.armorRed);
+        poly([[-10, -45], [5, -80], [15, -50]], C.armorRed);
+
+        ctx.restore();
+
+        // ==========================================
+        // 4. PIERNA DELANTERA
+        // ==========================================
+        ctx.save();
+        ctx.translate(20, 15);
+
+        // Pierna delantera - ya no hace stomp (kick ahora es con el cañón)
+        ctx.rotate(leg1);
+
+        poly([[-20, -10], [15, -5], [20, 30], [-15, 35]], C.armorDark);
+        poly([[-10, 0], [10, 0], [12, 25], [-8, 28]], C.armorRed);
+        poly([[-5, 15], [15, 12], [15, 30], [-5, 25]], C.neonOrange, true);
+
+        ctx.translate(0, 30);
+        // Rotación de la parte inferior - solo cuando camina
+        let frontLowerLegRotation = isWalking ? (-0.2 + Math.abs(Math.sin(w)) * 0.2) : -0.15;
+        ctx.rotate(frontLowerLegRotation);
+        poly([[-18, 0], [15, 0], [20, 40], [-22, 40]], C.armorDark);
+        poly([[-5, 5], [5, 5], [8, 30], [-8, 30]], C.armorRed);
+
+        poly([[-20, 40], [25, 40], [30, 50], [-20, 50]], '#0d1114');
+        ctx.restore();
+
+        // ==========================================
+        // 5. ESCUDO (IZQUIERDO) - SHIELD BASH ATTACK
+        // ==========================================
+        ctx.save();
+        ctx.translate(-25, -30);
+
+        if (isPunching) {
+            // SHIELD BASH: El escudo se mueve hacia adelante con fuerza
+            let bashProgress = Math.sin(attackProgress * Math.PI);
+            ctx.translate(60 * bashProgress, -20 * bashProgress);
+            ctx.rotate(-0.5 - bashProgress * 0.3);
+
+            // Efecto de impacto del escudo
+            if (attackProgress > 0.4 && attackProgress < 0.7) {
+                // Ondas de choque desde el escudo
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 4;
+                ctx.shadowColor = C.neonOrange;
+                ctx.shadowBlur = 20;
+                ctx.beginPath();
+                ctx.arc(50, 0, 30 + bashProgress * 30, -Math.PI / 2, Math.PI / 2);
+                ctx.stroke();
+                ctx.globalAlpha = 0.6;
+                ctx.beginPath();
+                ctx.arc(60, 0, 50 + bashProgress * 40, -Math.PI / 2, Math.PI / 2);
+                ctx.stroke();
+                ctx.globalAlpha = 1.0;
+                ctx.shadowBlur = 0;
+            }
+        } else if (isBlocking) {
+            ctx.rotate(-0.3);
+        } else {
+            ctx.rotate(0.1 + Math.sin(w * 0.5) * 0.05);
+        }
+
+        // Escudo forma angular
+        const shieldShape = [[-20, -40], [20, -50], [40, 0], [30, 60], [-30, 70], [-40, 0]];
+        poly(shieldShape, C.armorDark);
+
+        // Detalle interno (brilla durante Shield Bash)
+        const shieldInner = [[-15, -30], [15, -40], [30, 0], [20, 50], [-20, 60], [-30, 0]];
+        if (isPunching) {
+            ctx.shadowColor = C.neonOrange;
+            ctx.shadowBlur = 25;
+        }
+        poly(shieldInner, isPunching ? C.armorHigh : C.armorRed);
+        ctx.shadowBlur = 0;
+
+        // Grieta de luz en el escudo (más brillante durante ataques)
+        ctx.strokeStyle = isPunching ? '#fff' : C.neonOrange;
+        ctx.lineWidth = isPunching ? 5 : 3;
+        ctx.shadowColor = C.neonOrange;
+        ctx.shadowBlur = isPunching ? 25 : 10;
+        ctx.beginPath();
+        ctx.moveTo(0, -20);
+        ctx.lineTo(5, 0);
+        ctx.lineTo(-5, 20);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        ctx.restore();
+
+        ctx.restore(); // Para el scale inicial
     }
 }
 

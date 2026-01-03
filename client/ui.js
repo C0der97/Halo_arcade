@@ -19,17 +19,52 @@ class UIManager {
                 speed: 5,
                 power: 10,
                 defense: 8
+            },
+            hunter: {
+                name: 'HUNTER',
+                speed: 2,
+                power: 10,
+                defense: 10
             }
         };
 
         // Initialize audio manager
         this.audioManager = new AudioManager();
 
+        // Preload hover sound
+        this.hoverSound = new Audio('assets/sounds/cursor_vertical.wav');
+        this.hoverSound.volume = 0.5;
+
         // Game mode settings
         this.gameMode = 'vsPlayer'; // 'vsPlayer' or 'vsCPU'
         this.aiDifficulty = 'easy'; // 'easy', 'medium', or 'hard'
 
         this.setupMenuListeners();
+        this.setupHoverSounds();
+    }
+
+    // Play hover sound effect
+    playHoverSound() {
+        const sound = this.hoverSound.cloneNode();
+        sound.volume = 0.4;
+        sound.play().catch(() => { });
+    }
+
+    // Play click sound effect
+    playClickSound() {
+        const sound = this.hoverSound.cloneNode();
+        sound.volume = 0.6;
+        sound.playbackRate = 1.2; // Slightly higher pitch for click
+        sound.play().catch(() => { });
+    }
+
+    // Setup hover and click sounds for all interactive menu elements
+    setupHoverSounds() {
+        const buttons = document.querySelectorAll('.menu-btn, .difficulty-btn, .character-icon');
+        buttons.forEach(btn => {
+            btn.addEventListener('mouseenter', () => this.playHoverSound());
+            btn.addEventListener('click', () => this.playClickSound());
+        });
     }
 
     setupMenuListeners() {
@@ -156,44 +191,36 @@ class UIManager {
     updatePlayerInfo(playerNum, characterType) {
         const char = this.characterData[characterType];
 
-        // Update preview
-        const preview = document.getElementById(`p${playerNum}-preview`);
-        const iconClass = `${characterType}-bg`;
-        preview.innerHTML = `<div class="icon-bg ${iconClass}"></div>`;
-
         // Update name
         document.getElementById(`p${playerNum}-char-name`).textContent = char.name;
 
-        // Update stats
-        this.updateStatDots(`p${playerNum}-speed`, char.speed);
-        this.updateStatDots(`p${playerNum}-power`, char.power);
-        this.updateStatDots(`p${playerNum}-defense`, char.defense);
+        // Update stats as text values
+        const speedEl = document.getElementById(`p${playerNum}-speed`);
+        const powerEl = document.getElementById(`p${playerNum}-power`);
+        const defenseEl = document.getElementById(`p${playerNum}-defense`);
+
+        if (speedEl) speedEl.textContent = char.speed;
+        if (powerEl) powerEl.textContent = char.power;
+        if (defenseEl) defenseEl.textContent = char.defense;
     }
 
     updateStatDots(elementId, value) {
+        // Legacy function - keeping for compatibility
         const container = document.getElementById(elementId);
         if (!container) return;
-
-        const maxDots = 10;
-        container.innerHTML = '';
-
-        for (let i = 0; i < maxDots; i++) {
-            const dot = document.createElement('div');
-            dot.className = 'stat-dot';
-            if (i < value) {
-                dot.classList.add('filled');
-            }
-            container.appendChild(dot);
-        }
+        container.textContent = value;
     }
 
     clearPlayerInfo(playerNum) {
-        document.getElementById(`p${playerNum}-preview`).innerHTML =
-            '<div class="preview-placeholder">?</div>';
         document.getElementById(`p${playerNum}-char-name`).textContent = '---';
-        ['speed', 'power', 'defense'].forEach(stat => {
-            this.updateStatDots(`p${playerNum}-${stat}`, 0);
-        });
+        const speedEl = document.getElementById(`p${playerNum}-speed`);
+        const powerEl = document.getElementById(`p${playerNum}-power`);
+        const defenseEl = document.getElementById(`p${playerNum}-defense`);
+
+
+        if (speedEl) speedEl.textContent = '-';
+        if (powerEl) powerEl.textContent = '-';
+        if (defenseEl) defenseEl.textContent = '-';
     }
 
     updateCardHighlights() {
@@ -294,11 +321,11 @@ class UIManager {
     }
 
     showVictory(winnerName) {
-        // Wait 8 seconds to let victory video play before showing victory screen
+        // Delay before showing victory screen
         setTimeout(() => {
             this.showScreen('victory-screen');
             document.getElementById('winner-name').textContent = winnerName;
-        }, 8000);
+        }, 2000);
     }
 
     updateControlsVisibility() {

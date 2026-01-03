@@ -6,7 +6,7 @@ const CONFIG = {
 
     // Physics
     GRAVITY: 0.8,
-    GROUND_Y: 420, // Posición del suelo (subido para que personajes estén más visibles)
+    GROUND_Y: 480, // Posición del suelo (más abajo para mejor visibilidad)
     FRICTION: 0.85,
 
     // Game settings
@@ -15,7 +15,7 @@ const CONFIG = {
 
     // Character base stats (can be overridden by specific characters)
     BASE_SPEED: 5,
-    BASE_JUMP_FORCE: -18,
+    BASE_JUMP_FORCE: -24, // Más alto para poder evadir ataques
     BASE_HEALTH: 100,
 
     // Combat
@@ -24,7 +24,7 @@ const CONFIG = {
     COMBO_WINDOW: 500, // time window for combos in ms
 
     // Hitbox colors (for debug mode)
-    DEBUG_MODE: false, // Desactivado - hitboxes ya ajustados
+    DEBUG_MODE: false, // Desactivado
     HITBOX_COLOR: 'rgba(255, 0, 0, 0.5)',
     HURTBOX_COLOR: 'rgba(0, 255, 0, 0.5)',
 };

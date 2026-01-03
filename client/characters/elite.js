@@ -38,6 +38,16 @@ class Elite extends Character {
         this.animationSystem.play('idle');
     }
 
+    // Override kick - Elite Shot (shoots projectile)
+    kick() {
+        this.performAttack('kick', 300, 14);
+
+        // Play Elite Shot sound
+        const eliteShot = new Audio('assets/sounds/elite_shot.wav');
+        eliteShot.volume = 0.7;
+        eliteShot.play().catch(() => { });
+    }
+
     // Override special - Energy Sword Lunge
     special() {
         if (!this.isAttacking && !this.isHurt && !this.isBlocking) {
